@@ -213,48 +213,48 @@ port_years_plot_species1 <- port_rel_years_by_plot1 %>%
 
 ### combine all relevant data into one dataframe
 
-portal_rel_data <- inner_join(port_years_count, port_plots_count, by = "species")
-portal_mean_rel_data <- inner_join(port_years_plot_species, port_plots_year_species, by = "species")
-portal_total_rel_data <- inner_join(portal_rel_data, portal_mean_rel_data, by = "species")
+portal_rel_data1 <- inner_join(port_years_count1, port_plots_count1, by = "species")
+portal_mean_rel_data1 <- inner_join(port_years_plot_species1, port_plots_year_species1, by = "species")
+portal_total_rel_data1 <- inner_join(portal_rel_data1, portal_mean_rel_data1, by = "species")
 
 ### make scatterplots of portal control data
 
-ggplot(portal_total_rel_data, aes(x = rel_sites, y = rel_years)) +
+ggplot(portal_total_rel_data1, aes(x = rel_sites, y = rel_years)) +
   geom_point(size = 3) +
   xlab("Relative Number of Sites Occupied") + 
   ylab("Relative Number of Years Present") +
-  ggtitle("Portal: Control Only") +
+  ggtitle("Portal: Control & Krat Exclosure") +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
-ggsave(file = "portal_broad_yr_site.png", width = 6, height = 5)
+ggsave(file = "portal1_broad_yr_site.png", width = 6, height = 5)
 
-ggplot(portal_total_rel_data, aes(x = mean_rel_sites, y = rel_years)) +
+ggplot(portal_total_rel_data1, aes(x = mean_rel_sites, y = rel_years)) +
   geom_point(size = 3) +
   xlab("Relative Number of Sites Occupied Per Year") + 
   ylab("Relative Number of Years Present") +
-  ggtitle("Portal: Control Only") +
+  ggtitle("Portal: Control & Krat Exclosure") +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
-ggsave(file = "portal_mean_rel_site.png", width = 6, height = 5)
+ggsave(file = "portal1_mean_rel_site.png", width = 6, height = 5)
 
-ggplot(portal_total_rel_data, aes(x = rel_sites, y = mean_rel_years)) +
+ggplot(portal_total_rel_data1, aes(x = rel_sites, y = mean_rel_years)) +
   geom_point(size = 3) +
   xlab("Relative Number of Sites Occupied") + 
   ylab("Relative Number of Years Present Per Site") +
-  ggtitle("Portal: Control Only") +
+  ggtitle("Portal: Control & Krat Exclosure") +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
-ggsave(file = "portal_mean_rel_year.png", width = 6, height = 5)
+ggsave(file = "portal1_mean_rel_year.png", width = 6, height = 5)
 
-ggplot(portal_total_rel_data, aes(x = mean_rel_sites, y = mean_rel_years)) +
+ggplot(portal_total_rel_data1, aes(x = mean_rel_sites, y = mean_rel_years)) +
   geom_point(size = 3) +
   xlab("Relative Number of Sites Occupied Per Site") + 
   ylab("Relative Number of Years Present Per Site") +
-  ggtitle("Portal: Control Only") +
+  ggtitle("Portal: Control & Krat Exclosure") +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
-ggsave(file = "portal_mean_rel_year&site.png", width = 6, height = 5)
+ggsave(file = "portal1_mean_rel_year&site.png", width = 6, height = 5)

@@ -455,6 +455,7 @@ jor_sites_year_species <- jor_rel_sites_by_year %>%
                           summarize(mean_rel_sites = mean(rel_sites_by_year))
 jor_sites_year_species
 colnames(jor_sites_year_species)[1] <- "species"
+colnames(jor_rel_data)[1] <- "species"
 jor_rel_data_plus <- inner_join(jor_rel_data, jor_sites_year_species, by = "species")
 jor_rel_data_plus
 hist(jor_rel_data_plus$rel_sites)
@@ -737,7 +738,7 @@ ggsave(file = "all_mean_rel_year.png", width = 6, height = 5)
 
 ggplot(all_data_3, aes(x = mean_rel_sites, y = mean_rel_years)) +
   geom_point(aes(color = dataset), size = 3) +
-  xlab("Relative Number of Sites Occupied Per Site") + 
+  xlab("Relative Number of Sites Occupied Per Year") + 
   ylab("Relative Number of Years Present Per Site") +
   ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
   theme(panel.background = element_blank(), 
