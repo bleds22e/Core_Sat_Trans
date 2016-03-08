@@ -43,6 +43,17 @@ names(hja_data) <- c("year", "plot", "subplot", "species")
 names(sev_data) <- c("year", "season", "plot", "subplot", "species", "recap")
 names(sgs_data) <- c("year", "plot", "subplot", "species")
 
+# list of datasets
+datasets <- list(jor_data, sev_data, hja_data, sgs_data)
+
 # write function for correct grouping of data
 
-group_data
+group_data <- function(data){
+  # group and arrange a dataset by species, year, plot, and subplot
+  dat <- select(data) %>% 
+          group_by(species, year, plot, subplot) %>% 
+          arrange(species, year, plot, subplot)
+  return(dat)
+}
+
+jor <- group_data(jor_data)
