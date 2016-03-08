@@ -50,13 +50,22 @@ names(hja_data) <- c("year", "plot", "subplot", "species")
 names(sev_data) <- c("year", "season", "plot", "subplot", "species", "recap")
 names(sgs_data) <- c("year", "plot", "subplot", "species")
 
+select_data <- function(data){
+  # function for selecting only relevant columns
+  dat <- select(data, year, plot, subplot, species)
+  return(dat)
+}
+
+jor_data <- select_data(jor_data)
+hja_data <- select_data(hja_data)
+sev_data <- select_data(sev_data)
+sgs_data <- select_data(sgs_data)
+
 # list of datasets
 datasets <- list(jor_data, sev_data, hja_data, sgs_data)
 
 #####################
 # FUNCTIONS
-
-# function for grouping data properly
 
 group_data <- function(data){
   # group and arrange a dataset by species, year, plot, and subplot
@@ -66,10 +75,21 @@ group_data <- function(data){
   return(dat)
 }
 
+add_siteID <- function(data){
+  # make a column with a unique location code
+  dat <- data %>% mutate(siteID = paste(plot, subplot, sep = "_"))
+  return(dat)
+}
+
 #####################
 # APPLY FUNCTIONS TO DATASETS
 
-lapply(datasets, group_data)
+jor_data <- group_data(jor_data)
+jor_data <- add_siteID(jor_data)
 
 ###################################################################
 # WORKING AREA
+
+
+
+
