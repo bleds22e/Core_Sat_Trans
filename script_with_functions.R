@@ -1,11 +1,17 @@
 ### Cleaned data
+# EKB
+# March 7, 2016
 
-# load libraries
+###################
+# LIBRARIES
+
 library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-# read in files
+###################
+# LOAD FILES
+
 jornada <- read.csv("data/jornada_rodents.csv", header = TRUE, na.strings = ".")
 head(jornada)
 
@@ -18,7 +24,8 @@ head(hj_andrews)
 shortgrass_steppe <- read.table("data/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
 head(shortgrass_steppe)
 
-# prep files
+####################
+# PREP FILES
 
 jor_data <- select(jornada, year, season, habitat, web, spp, recap) %>% 
             filter(recap != "Y", spp != "DIPO1", spp != "PERO1", spp != "NA")
@@ -46,14 +53,23 @@ names(sgs_data) <- c("year", "plot", "subplot", "species")
 # list of datasets
 datasets <- list(jor_data, sev_data, hja_data, sgs_data)
 
-# write function for correct grouping of data
+#####################
+# FUNCTIONS
+
+# function for grouping data properly
 
 group_data <- function(data){
   # group and arrange a dataset by species, year, plot, and subplot
-  dat <- select(data) %>% 
-          group_by(species, year, plot, subplot) %>% 
-          arrange(species, year, plot, subplot)
+  dat <- data %>% 
+         group_by(species, year, plot, subplot) %>% 
+         arrange(species, year, plot, subplot)
   return(dat)
 }
 
-jor <- group_data(jor_data)
+#####################
+# APPLY FUNCTIONS TO DATASETS
+
+lapply(datasets, group_data)
+
+###################################################################
+# WORKING AREA
