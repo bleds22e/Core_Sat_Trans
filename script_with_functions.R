@@ -188,6 +188,3 @@ graph_local <- function(data){
           panel.grid.major = element_line(colour = "light gray"))
   return(plot)
 }
-
-graph_local(all_data)
-graph_local(jor_data)
