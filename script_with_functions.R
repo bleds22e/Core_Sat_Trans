@@ -13,16 +13,9 @@ library(ggplot2)
 # LOAD FILES
 
 jornada <- read.csv("data/jornada_rodents.csv", header = TRUE, na.strings = ".")
-head(jornada)
-
 sevilleta <- read.csv("data/sevilleta_sm_mrc.txt", header = TRUE)
-head(sevilleta)
-
 hj_andrews <- read.csv("data/hj_andrews.csv", header = TRUE)
-head(hj_andrews)
-
 shortgrass_steppe <- read.table("data/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
-head(shortgrass_steppe)
 
 ####################
 # PREP FILES
@@ -81,11 +74,45 @@ add_siteID <- function(data){
   return(dat)
 }
 
+find_years_overall <- function(data){
+  # create column for relative number of years a species occurs overall
+  dat <- select(data, species, year) %>% 
+    group_by(species, year) %>% 
+    summarise(year_count = n())
+  dat1 <- select(dat, species) %>% 
+    group_by(species) %>% 
+    summarise(years = n())
+  total_years <- length(unique(data$year))
+  dat1 <- mutate(dat1, rel_years = years/total_years)
+  return(dat1)
+}
+
+find_locs_overall <- function(data){
+  # create column for relative number of locations a species occurs overall
+  dat <- select(data, species, siteID) %>% 
+    group_by(species, siteID) %>% 
+    summarise(site_count = n())
+  dat1 <- select(dat, species) %>% 
+    group_by(species) %>% 
+    summarise(sites = n())
+  total_sites <- length(unique(data$siteID))
+  dat1 <- mutate(dat1, rel_sites = sites/total_sites)
+  return(dat1)
+}
+
+join_year_loc <- function(data){
+  # combine the outputs of find_years_overall and find_locs_overall into one data frame
+  dat <- left_join(x = find_years_overall(data), y = find_locs_overall(data), by = "species")
+  return(dat)
+}
+
+
 #####################
 # APPLY FUNCTIONS TO DATASETS
 
 jor_data <- group_data(jor_data)
 jor_data <- add_siteID(jor_data)
+jor_data <- join_year_loc(jor_data)
 
 ###################################################################
 # WORKING AREA
