@@ -43,16 +43,6 @@ names(hja_data) <- c("year", "plot", "subplot", "species")
 names(sev_data) <- c("year", "season", "plot", "subplot", "species", "recap")
 names(sgs_data) <- c("year", "plot", "subplot", "species")
 
-
-
-jor_data <- select_data(jor_data)
-hja_data <- select_data(hja_data)
-sev_data <- select_data(sev_data)
-sgs_data <- select_data(sgs_data)
-
-# list of datasets
-datasets <- list(jor_data, sev_data, hja_data, sgs_data)
-
 #####################
 # FUNCTIONS
 
@@ -156,7 +146,12 @@ all_together <- function(data){
 #####################
 # APPLY FUNCTIONS TO DATASETS
 
+jor_data <- all_together(jor_data)
+sev_data <- all_together(sev_data)
+hja_data <- all_together(hja_data)
+sgs_data <- all_together(sgs_data)
+
+
 
 ###################################################################
 # WORKING AREA
-
