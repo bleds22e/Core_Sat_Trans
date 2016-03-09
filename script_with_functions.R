@@ -75,26 +75,26 @@ add_siteID <- function(data){
 }
 
 find_reg_persist <- function(data){
-  # create column for relative regional persistence
+  # create column for relative regional persistence (years overall)
   dat <- select(data, species, year) %>% 
-    group_by(species, year) %>% 
-    summarise(year_count = n())
+         group_by(species, year) %>% 
+         summarise(year_count = n())
   dat1 <- select(dat, species) %>% 
-    group_by(species) %>% 
-    summarise(years = n())
+          group_by(species) %>% 
+          summarise(years = n())
   total_years <- length(unique(data$year))
   dat1 <- mutate(dat1, rel_reg_persist = years/total_years)
   return(dat1)
 }
 
 find_reg_occup <- function(data){
-  # create column for relative regional occupancy
+  # create column for relative regional occupancy (sites overall)
   dat <- select(data, species, siteID) %>% 
-    group_by(species, siteID) %>% 
-    summarise(site_count = n())
+         group_by(species, siteID) %>% 
+         summarise(site_count = n())
   dat1 <- select(dat, species) %>% 
-    group_by(species) %>% 
-    summarise(sites = n())
+          group_by(species) %>% 
+          summarise(sites = n())
   total_sites <- length(unique(data$siteID))
   dat1 <- mutate(dat1, rel_reg_occup = sites/total_sites)
   return(dat1)
@@ -107,7 +107,7 @@ join_regionals <- function(data){
 }
 
 rel_local_persist <- function(data){
-  # create a column for average relative local occupancy
+  # create a column for average relative local occupancy (year by site)
   dat <- select(data, year, species, siteID) %>% 
          group_by(year, species) %>% 
          summarise(site_by_year = n_distinct(siteID))
@@ -115,6 +115,19 @@ rel_local_persist <- function(data){
   dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
   dat1 <- dat %>% group_by(species) %>% 
           summarise(mean_local_persist = mean(rel_sites_by_year))
+}
+
+
+rel_local_occup <- function(data){
+  # create a column for average relative local occupancy (site by year)
+  dat <- select(data, year, species, siteID) %>% 
+         group_by(siteID, species) %>% 
+         summarise(years_by_site = n_distinct(year))
+  total_years <- length(unique(data$year))
+  dat <- mutate(dat, rel_years_by_site = years_by_site/total_years)
+  dat1 <- dat %>% group_by(species) %>% 
+          summarize(mean_local_occup = mean(rel_years_by_site))
+  return(dat1)
 }
 
 #####################
@@ -130,60 +143,3 @@ jor_data <- join_regionals(jor_data)
 # WORKING AREA
 
 
-
-
-
-jor_sites_by_year <- select(jor_data1, year, spp, site_ID) %>% 
-  group_by(year, spp) %>% 
-  summarise(site_by_year = n_distinct(site_ID))
-
-# total years
-jor_total_sites <- length(unique(jor_data1$site_ID))
-
-# add column for relative number of sites per year
-jor_rel_sites_by_year <- mutate(jor_sites_by_year, rel_sites_by_year = site_by_year/jor_total_sites)
-jor_rel_sites_by_year
-
-# average relative sites per year by species
-jor_sites_year_species <- jor_rel_sites_by_year %>% 
-  group_by(spp) %>% 
-  summarize(mean_rel_sites = mean(rel_sites_by_year))
-jor_sites_year_species
-colnames(jor_sites_year_species)[1] <- "species"
-colnames(jor_rel_data)[1] <- "species"
-jor_rel_data_plus <- inner_join(jor_rel_data, jor_sites_year_species, by = "species")
-jor_rel_data_plus
-hist(jor_rel_data_plus$rel_sites)
-hist(jor_rel_data_plus$mean_rel_sites)
-plot(jor_rel_data_plus$rel_years ~ jor_rel_data_plus$mean_rel_sites)
-
-
-
-jor
-
-years_by_site <- 
-
-
-jor_years_by_site <- select(jor_data1, year, spp, site_ID) %>% 
-  group_by(site_ID, spp) %>% 
-  summarise(years_by_site = n_distinct(year))
-
-# total years
-jor_total_years <- length(unique(jor_data1$year))
-jor_total_years
-
-# add column for relative number of sites per year
-jor_rel_years_by_site <- mutate(jor_years_by_site, rel_years_by_site = years_by_site/jor_total_years)
-jor_rel_years_by_site
-
-# average relative sites per year by species
-jor_years_site_species <- jor_rel_years_by_site %>% 
-  group_by(spp) %>% 
-  summarize(mean_rel_years = mean(rel_years_by_site))
-jor_years_site_species
-colnames(jor_years_site_species)[1] <- "species"
-jor_rel_data_3 <- inner_join(jor_rel_data_plus, jor_years_site_species, by = "species")
-jor_rel_data_3
-
-plot(jor_rel_data_3$mean_rel_years ~ jor_rel_data_3$rel_sites)
-plot(jor_rel_data_3$mean_rel_years ~ jor_rel_data_3$mean_rel_sites)
