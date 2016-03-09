@@ -46,6 +46,8 @@ names(sgs_data) <- c("year", "plot", "subplot", "species")
 #####################
 # FUNCTIONS
 
+# DATA functions
+
 select_data <- function(data){
   # function for selecting only relevant columns
   dat <- select(data, year, plot, subplot, species)
@@ -142,6 +144,9 @@ all_together <- function(data){
   dat <- combine_all(dat)
   return(dat)
 }
+
+# GRAPHING functions
+
 
 #####################
 # APPLY FUNCTIONS TO DATASETS
