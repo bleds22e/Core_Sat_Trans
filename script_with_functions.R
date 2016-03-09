@@ -147,6 +147,31 @@ all_together <- function(data){
 
 # GRAPHING functions
 
+graph_local <- function(data){
+  # graph of mean local persistance as a function of mean local occupancy
+  plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
+    geom_point(aes(color = dataset), size = 3) +
+    xlab("Relative Number of Sites Occupied Per Year") + 
+    ylab("Relative Number of Years Present Per Site") +
+    ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
+    theme(panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major = element_line(colour = "light gray"))
+  return(plot)
+}
+
+graph_regional <- function(data){
+  # graph of mean local persistance as a function of mean local occupancy
+  plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+    geom_point(aes(color = dataset), size = 3) +
+    xlab("Relative Number of Sites Occupied Per Year") + 
+    ylab("Relative Number of Years Present Per Site") +
+    ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
+    theme(panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major = element_line(colour = "light gray"))
+  return(plot)
+}
 
 #####################
 # APPLY FUNCTIONS TO DATASETS
@@ -167,29 +192,12 @@ sgs_data$dataset <- "sgs"
 all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 
 # graph all data
-ggplot(all_data, aes(x = mean_local_occup, y = mean_local_persist)) +
-  geom_point(aes(color = dataset), size = 3) +
-  xlab("Relative Number of Sites Occupied Per Year") + 
-  ylab("Relative Number of Years Present Per Site") +
-  ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
-  theme(panel.background = element_blank(), 
-        axis.line = element_line(colour = "black"), 
-        panel.grid.major = element_line(colour = "light gray"))
+graph_regional(all_data)
+graph_local(all_data)
+
 
 ###################################################################
 # WORKING AREA
 
-# graphing functions
 
-graph_local <- function(data){
-  # graph of mean local persistance as a function of mean local occupancy
-  plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
-    geom_point(aes(color = dataset), size = 3) +
-    xlab("Relative Number of Sites Occupied Per Year") + 
-    ylab("Relative Number of Years Present Per Site") +
-    ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
-    theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray"))
-  return(plot)
-}
+
