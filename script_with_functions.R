@@ -177,13 +177,13 @@ graph_regional <- function(data){
 # APPLY FUNCTIONS TO DATASETS
 
 # all functions for all datasets
-jor_data <- all_together(jor_data)
+jor_data <- all_together(jor_data) # I can't figure out how to loop through these
 sev_data <- all_together(sev_data)
 hja_data <- all_together(hja_data)
 sgs_data <- all_together(sgs_data)
 
 # add a dataset column
-jor_data$dataset <- "jor"
+jor_data$dataset <- "jor"    # is there a way to do this with a loop?
 hja_data$dataset <- "hja"
 sev_data$dataset <- "sev"
 sgs_data$dataset <- "sgs"
@@ -194,7 +194,6 @@ all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 # graph all data
 graph_regional(all_data)
 graph_local(all_data)
-
 
 ###################################################################
 # WORKING AREA
