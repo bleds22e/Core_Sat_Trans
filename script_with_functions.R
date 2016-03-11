@@ -138,7 +138,7 @@ combine_all <- function(data){
 
 all_together <- function(data){
   # run all functions together to get the full output
-  dat <- select_data(data)
+  dat <- select_data(data) # can use pipes here
   dat <- group_data(dat)
   dat <- add_siteID(dat)
   dat <- combine_all(dat)
@@ -177,6 +177,7 @@ graph_regional <- function(data){
 # APPLY FUNCTIONS TO DATASETS
 
 # all functions for all datasets
+
 jor_data <- all_together(jor_data) # I can't figure out how to loop through these
 sev_data <- all_together(sev_data)
 hja_data <- all_together(hja_data)
@@ -198,5 +199,15 @@ graph_local(all_data)
 ###################################################################
 # WORKING AREA
 
+#all_output <- all_data %>%
+#  group_by(dataset) %>%
+#  do(all_together)
 
+#datasets = list(jor_data, sev_data, hja_data, sgs_data)
+#output = lapply(datasets, all_together)
 
+#output = data.frame()
+#for (dataset in datasets){
+  #dataset_output <- all_together(dataset)
+  #output = rbind(output, dataset_output)
+#}
