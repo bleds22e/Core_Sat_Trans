@@ -192,7 +192,9 @@ all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 
 # graph all data
 graph_regional(all_data)
+ggsave(file = "all_regional.png", width = 6, height = 5)
 graph_local(all_data)
+ggsave(file = "all_local.png", width = 6, height = 5)
 
 ###################################################################
 # WORKING AREA
