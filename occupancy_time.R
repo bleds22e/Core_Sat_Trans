@@ -111,13 +111,13 @@ sgs_occupancy <- get_occupancy(sgs_data)
 # OCCUPANCY PLOTS
 
 hja_occ_plot <- plot_occupancy(hja_occupancy)
-ggsave(file = "occupancy_hja.png", width = 6, height = 5)
+ggsave(file = "occupancy_hja.png", width = 7, height = 6)
 
 jor_occ_plot <- plot_occupancy(jor_occupancy)
-ggsave(file = "occupancy_jor.png", width = 6, height = 5)
+ggsave(file = "occupancy_jor.png", width = 7, height = 6)
 
 sev_occ_plot <- plot_occupancy(sev_occupancy)
-ggsave(file = "occupancy_sev.png", width = 6, height = 5)
+ggsave(file = "occupancy_sev.png", width = 7, height = 6)
 
 sgs_occ_plot <- plot_occupancy(sgs_occupancy)
-ggsave(file = "occupancy_sgs.png", width = 6, height = 5)
+ggsave(file = "occupancy_sgs.png", width = 7, height = 6)
