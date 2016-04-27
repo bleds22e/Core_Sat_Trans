@@ -91,11 +91,11 @@ get_occupancy <- function(data){
 plot_occupancy <- function(data){
   # plotting occupancy against time with individual lines for species
   plot <- ggplot(data, aes(x = year, y = occupancy, color = species)) +
-          geom_point(size = 2) +
-          geom_line(size = 1) +
-          theme(panel.background = element_blank(), 
-                axis.line = element_line(colour = "black"), 
-                panel.grid.major = element_line(colour = "light gray"))
+    geom_point(size = 2) +
+    geom_line(size = 1) +
+    theme(panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major = element_line(colour = "light gray"))
   return(plot)
 }
 
