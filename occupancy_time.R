@@ -66,6 +66,20 @@ add_siteID <- function(data){
   return(dat)
 }
 
+occupancy <- function(data){
+  # calculate occupancy of species per year, including zeros
+  occ <- select(data, year, species, siteID) %>% 
+    group_by(species, year) %>% 
+    summarize(occupancy = n_distinct(siteID))
+  sp <- unique(occ$species)
+  yr <- unique(occ$year)
+  full_grid <- expand.grid(species = sp, year = yr)
+  occ1 <- right_join(occ, full_grid, by = c("species", "year"))
+  occ1$occupancy[is.na(occ1$occupancy)] <- 0
+  return(occ1)
+}
+
+
 hja_data <- select_data(hja_data)
 hja_data <- group_data(hja_data)
 hja_data <- add_siteID(hja_data)
@@ -73,5 +87,5 @@ hja_data <- add_siteID(hja_data)
 #####################
 # WORKING
 
-# number of sites present per year
+
 
