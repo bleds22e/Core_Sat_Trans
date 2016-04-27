@@ -79,13 +79,45 @@ occupancy <- function(data){
   return(occ1)
 }
 
+get_occupancy <- function(data){
+  # combine all relevant functions to create an occupancy dataframe
+  dat <- select_data(data) %>% 
+    group_data() %>% 
+    add_siteID() %>% 
+    occupancy()
+  return(dat)
+}
 
-hja_data <- select_data(hja_data)
-hja_data <- group_data(hja_data)
-hja_data <- add_siteID(hja_data)
+plot_occupancy <- function(data){
+  # plotting occupancy against time with individual lines for species
+  plot <- ggplot(data, aes(x = year, y = occupancy, color = species)) +
+          geom_point(size = 2) +
+          geom_line(size = 1) +
+          theme(panel.background = element_blank(), 
+                axis.line = element_line(colour = "black"), 
+                panel.grid.major = element_line(colour = "light gray"))
+  return(plot)
+}
 
 #####################
-# WORKING
+# OCCUPANCIES
 
+hja_occupancy <- get_occupancy(hja_data)
+jor_occupancy <- get_occupancy(jor_data)
+sev_occupancy <- get_occupancy(sev_data)
+sgs_occupancy <- get_occupancy(sgs_data)
 
+#####################
+# OCCUPANCY PLOTS
 
+hja_occ_plot <- plot_occupancy(hja_occupancy)
+ggsave(file = "occupancy_hja.png", width = 6, height = 5)
+
+jor_occ_plot <- plot_occupancy(jor_occupancy)
+ggsave(file = "occupancy_jor.png", width = 6, height = 5)
+
+sev_occ_plot <- plot_occupancy(sev_occupancy)
+ggsave(file = "occupancy_sev.png", width = 6, height = 5)
+
+sgs_occ_plot <- plot_occupancy(sgs_occupancy)
+ggsave(file = "occupancy_sgs.png", width = 6, height = 5)
