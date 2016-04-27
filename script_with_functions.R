@@ -100,27 +100,27 @@ join_regionals <- function(data){
   return(dat)
 }
 
-rel_local_occup <- function(data){
-  # create a column for average relative local occupancy (site by year)
+rel_local_persist <- function(data){
+  # create a column for average relative local occupancy (year by site)
   dat <- select(data, year, species, siteID) %>% 
          group_by(year, species) %>% 
          summarise(site_by_year = n_distinct(siteID))
   total_sites <- length(unique(data$siteID))
   dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
   dat1 <- dat %>% group_by(species) %>% 
-          summarise(mean_local_occup = mean(rel_sites_by_year))
+          summarise(mean_local_persist = mean(rel_sites_by_year))
 }
 
 
-rel_local_persist <- function(data){
-  # create a column for average relative local persistance (year by site)
+rel_local_occup <- function(data){
+  # create a column for average relative local occupancy (site by year)
   dat <- select(data, year, species, siteID) %>% 
          group_by(siteID, species) %>% 
          summarise(years_by_site = n_distinct(year))
   total_years <- length(unique(data$year))
   dat <- mutate(dat, rel_years_by_site = years_by_site/total_years)
   dat1 <- dat %>% group_by(species) %>% 
-          summarize(mean_local_persist = mean(rel_years_by_site))
+          summarize(mean_local_occup = mean(rel_years_by_site))
   return(dat1)
 }
 
@@ -151,8 +151,9 @@ graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
     geom_point(aes(color = dataset), size = 3) +
-    xlab("Mean Local Occupancy") + 
-    ylab("Mean Local Persistence") +
+    xlab("Relative Number of Sites Occupied Per Year") + 
+    ylab("Relative Number of Years Present Per Site") +
+    ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"))
@@ -163,8 +164,9 @@ graph_regional <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
     geom_point(aes(color = dataset), size = 3) +
-    xlab("Regional Occupancy") + 
-    ylab("Regional Persistence") +
+    xlab("Relative Number of Sites Occupied Per Year") + 
+    ylab("Relative Number of Years Present Per Site") +
+    ggtitle("Rel. Years (per site) ~ Rel. Sites (per year)") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"))
@@ -192,13 +194,10 @@ all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 
 # graph all data
 graph_regional(all_data)
-ggsave(file = "all_regional.png", width = 6, height = 5)
 graph_local(all_data)
-ggsave(file = "all_local.png", width = 6, height = 5)
 
 ###################################################################
 # WORKING AREA
-
 
 #all_output <- all_data %>%
 #  group_by(dataset) %>%
@@ -212,5 +211,3 @@ ggsave(file = "all_local.png", width = 6, height = 5)
   #dataset_output <- all_together(dataset)
   #output = rbind(output, dataset_output)
 #}
-
-#hja <- select_data(hja_data) %>% add_siteID()
