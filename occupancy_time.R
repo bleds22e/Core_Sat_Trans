@@ -44,7 +44,7 @@ names(sev_data) <- c("year", "season", "plot", "subplot", "species", "recap")
 names(sgs_data) <- c("year", "plot", "subplot", "species")
 
 ####################
-# CALCULATIONS
+# FUNCTIONS
 
 select_data <- function(data){
   # function for selecting only relevant columns
@@ -121,3 +121,11 @@ ggsave(file = "occupancy_sev.png", width = 7, height = 6)
 
 sgs_occ_plot <- plot_occupancy(sgs_occupancy)
 ggsave(file = "occupancy_sgs.png", width = 7, height = 6)
+
+#####################
+# COEFFICIENTS OF VARIATION
+
+cv <- hja_occupancy %>% 
+      group_by(species) %>% 
+      summarise(mean = mean(occupancy), sd = sd(occupancy)) %>% 
+      mutate(cv = sd/mean)
