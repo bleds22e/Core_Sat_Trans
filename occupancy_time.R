@@ -99,6 +99,40 @@ plot_occupancy <- function(data){
   return(plot)
 }
 
+calculate_cv <- function(occupancy_data){
+  # calculates the mean and standard deviation for occupancy over time
+  # and adds a new column of the coefficients of variation
+  cv <- occupancy_data %>% 
+        group_by(species) %>% 
+        summarise(mean = mean(occupancy), sd = sd(occupancy)) %>% 
+        mutate(cv = sd/mean)
+  return(cv)
+}
+
+plot_cv_occupancy <- function(cv_data){
+  # plot of the coefficients of variation against mean occupancy
+  cv_plot <- ggplot(cv_data, aes(x = mean, y = cv)) +
+                geom_point(size = 2) +
+                xlab("Mean Occupancy") +
+                ylab("Coefficients of Variation") + 
+                theme(panel.background = element_blank(), 
+                    axis.line = element_line(colour = "black"), 
+                    panel.grid.major = element_blank())
+  return(cv_plot)
+}
+
+plot_sd_occupancy <- function(cv_data){
+  # plot of the coefficients of variation against mean occupancy
+  sd_plot <- ggplot(cv_data, aes(x = mean, y = sd)) +
+    geom_point(size = 2) +
+    xlab("Mean Occupancy") +
+    ylab("Coefficients of Variation") + 
+    theme(panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major = element_blank())
+  return(sd_plot)
+}
+
 #####################
 # OCCUPANCIES
 
@@ -125,7 +159,30 @@ ggsave(file = "occupancy_sgs.png", width = 7, height = 6)
 #####################
 # COEFFICIENTS OF VARIATION
 
-cv <- hja_occupancy %>% 
-      group_by(species) %>% 
-      summarise(mean = mean(occupancy), sd = sd(occupancy)) %>% 
-      mutate(cv = sd/mean)
+hja_cv <- calculate_cv(hja_occupancy)
+jor_cv <- calculate_cv(jor_occupancy)
+sev_cv <- calculate_cv(sev_occupancy)
+sgs_cv <- calculate_cv(sgs_occupancy)
+
+######################
+# CV PLOTS
+
+hja_cv_plot <- plot_cv_occupancy(hja_cv)
+jor_cv_plot <- plot_cv_occupancy(jor_cv)
+sev_cv_plot <- plot_cv_occupancy(sev_cv)
+sgs_cv_plot <- plot_cv_occupancy(sgs_cv)
+
+hja_cv_plot
+jor_cv_plot
+sev_cv_plot
+sgs_cv_plot
+
+hja_sd_plot <- plot_sd_occupancy(hja_cv)
+jor_sd_plot <- plot_sd_occupancy(jor_cv)
+sev_sd_plot <- plot_sd_occupancy(sev_cv)
+sgs_sd_plot <- plot_sd_occupancy(sgs_cv)
+
+hja_sd_plot
+jor_sd_plot
+sev_sd_plot
+sgs_sd_plot
