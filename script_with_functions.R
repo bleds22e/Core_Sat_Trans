@@ -31,7 +31,7 @@ sev_data <- select(sevilleta, year, season, location, web, species, recap) %>%
                    species != "nesp", species != "onsp", species != "pesp", 
                    species != "resp", species != "na", species != "pmsp", species != "spsp", 
                    year < 2009, location != "two22", location != "blugrama", 
-                   location != "savanna", location != "goatdraw")
+                   location != "savanna", location != "goatdraw", location != "rsgrass")
 
 sgs_data <- select(shortgrass_steppe, YEAR, VEG, WEB, SPP) %>% 
             filter(SPP != 'NA')

@@ -214,10 +214,10 @@ sev_rel_data
 ### different time frame and sites
 sev_data1 <- select(sevilleta, year, season, location, web, species, recap) %>% 
              filter(recap != "y", species != "pgsp", species != "dipo", 
-                species != "nesp", species != "onsp", species != "pesp", 
-                species != "resp", species != "na", species != "pmsp", species != "spsp", 
-                year < 2009, location != "two22", location != "blugrama", 
-                location != "savanna", location != "goatdraw") %>% 
+                    species != "nesp", species != "onsp", species != "pesp", 
+                    species != "resp", species != "na", species != "pmsp", species != "spsp", 
+                    year < 2009, location != "two22", location != "blugrama", 
+                    location != "savanna", location != "goatdraw", location != "rsgrass") %>% 
              group_by(species, year, season, location, web) %>% 
              arrange(species, year, season, location, web) %>% 
              summarise(count = n())
