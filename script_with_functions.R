@@ -150,7 +150,7 @@ all_together <- function(data){
 graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
-    geom_point(aes(color = dataset), size = 3) +
+    geom_point(aes(color = LTER), size = 3) +
     xlab("Mean Local Occupancy") + 
     ylab("Mean Local Persistence") +
     theme(panel.background = element_blank(), 
@@ -162,12 +162,12 @@ graph_local <- function(data){
 graph_regional <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-    geom_point(aes(color = dataset), size = 3) +
+    geom_point(aes(color = LTER), size = 3) +
     xlab("Regional Occupancy") + 
     ylab("Regional Persistence") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray"))
+          panel.grid.major = element_line(colour = "light gray")) 
   return(plot)
 }
 
@@ -182,10 +182,10 @@ hja_data <- all_together(hja_data)
 sgs_data <- all_together(sgs_data)
 
 # add a dataset column
-jor_data$dataset <- "jor"    # is there a way to do this with a loop?
-hja_data$dataset <- "hja"
-sev_data$dataset <- "sev"
-sgs_data$dataset <- "sgs"
+jor_data$LTER <- "Jornada Basin"    # is there a way to do this with a loop?
+hja_data$LTER <- "H.J. Andrews"
+sev_data$LTER <- "Sevilleta"
+sgs_data$LTER <- "Shortgrass Steppe"
 
 # combine all datasets into one
 all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
