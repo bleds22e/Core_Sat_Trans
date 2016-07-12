@@ -12,10 +12,10 @@ library(ggplot2)
 ###################
 # LOAD FILES
 
-jornada <- read.csv("data/jornada_rodents.csv", header = TRUE, na.strings = ".")
-sevilleta <- read.csv("data/sevilleta_sm_mrc.txt", header = TRUE)
-hj_andrews <- read.csv("data/hj_andrews.csv", header = TRUE)
-shortgrass_steppe <- read.table("data/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
+jornada <- read.csv("data/Rodents/jornada_rodents.csv", header = TRUE, na.strings = ".")
+sevilleta <- read.csv("data/Rodents/sevilleta_sm_mrc.txt", header = TRUE)
+hj_andrews <- read.csv("data/Rodents/hj_andrews.csv", header = TRUE)
+shortgrass_steppe <- read.table("data/Rodents/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
 
 ####################
 # PREP FILES
