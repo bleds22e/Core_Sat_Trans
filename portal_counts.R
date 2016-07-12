@@ -8,8 +8,8 @@ library(ggplot2)
 
 # read files
 
-species <- read.csv("data/species_portal.csv", header = TRUE, na.strings = c(""))
-surveys <- read.csv("data/surveys.csv", header = TRUE, na.strings = c(""))
+species <- read.csv("data/Rodents/species_portal.csv", header = TRUE, na.strings = c(""))
+surveys <- read.csv("data/Rodents/surveys.csv", header = TRUE, na.strings = c(""))
 
 # get only known rodents
 rodents <- select(species, New.Code, Rodent) %>% 
