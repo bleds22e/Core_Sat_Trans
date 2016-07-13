@@ -150,24 +150,28 @@ all_together <- function(data){
 graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
-    geom_point(aes(color = LTER), size = 3) +
+    geom_point(aes(color = LTER), size = 4) +
     xlab("Mean Local Occupancy") + 
     ylab("Mean Local Persistence") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray"))
+          panel.grid.major = element_line(colour = "light gray"),
+          axis.title = element_text(size = 12, face = "bold"),
+          axis.text = element_text(size = 12))
   return(plot)
 }
 
 graph_regional <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-    geom_point(aes(color = LTER), size = 3) +
+    geom_point(aes(color = LTER), size = 4) +
     xlab("Regional Occupancy") + 
     ylab("Regional Persistence") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray")) 
+          panel.grid.major = element_line(colour = "light gray"),
+          axis.title = element_text(size = 12, face = "bold"),
+          axis.text = element_text(size = 12)) 
   return(plot)
 }
 
@@ -192,9 +196,9 @@ all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 
 # graph all data
 graph_regional(all_data)
-ggsave(file = "all_regional.png", width = 6, height = 5)
+ggsave(file = "all_regional.png", width = 13, height = 10.5)
 graph_local(all_data)
-ggsave(file = "all_local.png", width = 6, height = 5)
+ggsave(file = "all_local.png", width = 13, height = 10.5)
 
 ###################################################################
 # WORKING AREA
