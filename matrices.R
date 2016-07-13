@@ -2,6 +2,8 @@
 # 7/12/2016
 # EKB, with math help from D. Harris
 
+library(dplyr)
+
 yt_sev = 20
 yt_jor = 13
 yt_sgs = 7
@@ -12,8 +14,14 @@ st_jor = 6
 st_sgs = 7
 st_hja = 9
 
-sum(rowMeans(matrix) / sum(rowSums(matrix) > 0))
+#sum(rowMeans(matrix)) / sum(rowSums(matrix) > 0))
+vec_max <- c(1,1,1,1,1,1,1)
+vec_min <- c(0,0,0,0,0,0,1)
 
+sgs_yp <- matrix(0, nrow = 7, ncol = 7)
+sgs_yp1 <- sgs_yp %>% replace(sgs_yp[1,], values = vec_max)
+sgs_yp[1,] <- vec_max 
+sgs_yp1 <- sgs_yp
 
 
 ################################################
