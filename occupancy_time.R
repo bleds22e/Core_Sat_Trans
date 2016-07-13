@@ -190,8 +190,33 @@ sgs_sd_plot
 #########################
 # WORKING
 
-sev <- select(sev_data, year, season, location) %>% 
-  group_by(year, season, location) %>% 
-  arrange(year, season, location)
-sev_trap_sessions <- unique(sev)
-sev_trap_sessions
+# add a dataset column
+jor_cv$LTER <- "Jornada Basin"  
+hja_cv$LTER <- "H.J. Andrews"
+sev_cv$LTER <- "Sevilleta"
+sgs_cv$LTER <- "Shortgrass Steppe"
+
+all_cv_data <- rbind(hja_cv, jor_cv, sev_cv, sgs_cv)
+
+ggplot(all_cv_data, aes(x = mean, y = cv, color = LTER)) +
+    geom_point(size = 4) +
+    geom_smooth(se = FALSE) +
+    xlab("Mean Occupancy") +
+    ylab("Coefficients of Variation") + 
+    theme(panel.background = element_blank(), 
+          axis.line = element_line(colour = "black"), 
+          panel.grid.major = element_line(colour = "light gray"),
+          axis.title = element_text(size = 12, face = "bold"),
+          axis.text = element_text(size = 12)) 
+
+cv_plot <- ggplot(all_cv_data, aes(x = mean, y = cv, color = LTER)) +
+  geom_point(size = 4) +
+  stat_smooth(method = "lm", formula = y ~ log(x), se = FALSE) +
+  xlab("Mean Occupancy") +
+  ylab("Coefficients of Variation") + 
+  theme(panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"), 
+        panel.grid.major = element_line(colour = "light gray"),
+        axis.title = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 12)) 
+ggsave(cv_plot, file = "all_cv_plot.png", width = 7, height = 6)
