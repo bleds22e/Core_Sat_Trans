@@ -14,15 +14,51 @@ st_jor = 6
 st_sgs = 7
 st_hja = 9
 
+find_range <- function(matrix){
+  num <- sum(rowMeans(matrix)) / sum(rowSums(matrix) > 0)
+  return(num)
+}
+
 #sum(rowMeans(matrix)) / sum(rowSums(matrix) > 0))
 vec_max <- c(1,1,1,1,1,1,1)
 vec_min <- c(0,0,0,0,0,0,1)
 
 sgs_yp <- matrix(0, nrow = 7, ncol = 7)
-sgs_yp1 <- sgs_yp %>% replace(sgs_yp[1,], values = vec_max)
+sgs_yp1_max <- sgs_yp %>% replace(sgs_yp[1,], values = vec_max)
 sgs_yp[1,] <- vec_max 
-sgs_yp1 <- sgs_yp
+sgs_yp1_max <- sgs_yp
+sgs_yp[2,] <- vec_max
+sgs_yp2_max <- sgs_yp
+sgs_yp[3,] <- vec_max
+sgs_yp3_max <- sgs_yp
+sgs_yp[4,] <- vec_max
+sgs_yp4_max <- sgs_yp
+sgs_yp[5,] <- vec_max
+sgs_yp5_max <- sgs_yp
+sgs_yp[6,] <- vec_max
+sgs_yp6_max <- sgs_yp
+sgs_yp[7,] <- vec_max
+sgs_yp7_max <- sgs_yp
 
+sgs_yp <- matrix(0, nrow = 7, ncol = 7)
+sgs_yp1_min <- sgs_yp %>% replace(sgs_yp[1,], values = vec_min)
+sgs_yp[1,] <- vec_min 
+sgs_yp1_min <- sgs_yp
+sgs_yp[2,] <- vec_min
+sgs_yp2_min <- sgs_yp
+sgs_yp[3,] <- vec_min
+sgs_yp3_min <- sgs_yp
+sgs_yp[4,] <- vec_min
+sgs_yp4_min <- sgs_yp
+sgs_yp[5,] <- vec_min
+sgs_yp5_min <- sgs_yp
+sgs_yp[6,] <- vec_min
+sgs_yp6_min <- sgs_yp
+sgs_yp[7,] <- vec_min
+sgs_yp7_min <- sgs_yp
+
+find_range(sgs_yp7_max)
+find_range(sgs_yp1_min)
 
 ################################################
 
