@@ -150,28 +150,32 @@ all_together <- function(data){
 graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
-    geom_point(aes(color = LTER), size = 4) +
+    geom_point(aes(color = LTER), size = 6) +
     xlab("Mean Local Occupancy") + 
     ylab("Mean Local Persistence") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"),
-          axis.title = element_text(size = 12, face = "bold"),
-          axis.text = element_text(size = 12))
+          axis.title = element_text(size = 20, face = "bold"),
+          axis.text = element_text(size = 16),
+          legend.title = element_text(size = 16),
+          legend.text = element_text(size = 16))
   return(plot)
 }
 
 graph_regional <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-    geom_point(aes(color = LTER), size = 4) +
+    geom_point(aes(color = LTER), size = 6) +
     xlab("Regional Occupancy") + 
     ylab("Regional Persistence") +
     theme(panel.background = element_blank(), 
           axis.line = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"),
-          axis.title = element_text(size = 12, face = "bold"),
-          axis.text = element_text(size = 12)) 
+          axis.title = element_text(size = 20, face = "bold"),
+          axis.text = element_text(size = 16),
+          legend.title = element_text(size = 16),
+          legend.text = element_text(size = 16)) 
   return(plot)
 }
 
