@@ -154,7 +154,8 @@ graph_local <- function(data){
     xlab("Mean Local Occupancy") + 
     ylab("Mean Local Persistence") +
     theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
+          axis.line.x = element_line(colour = "black"),
+          axis.line.y = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"),
           axis.title = element_text(size = 20, face = "bold"),
           axis.text = element_text(size = 16),
@@ -170,7 +171,8 @@ graph_regional <- function(data){
     xlab("Regional Occupancy") + 
     ylab("Regional Persistence") +
     theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
+          axis.line.x = element_line(colour = "black"),
+          axis.line.y = element_line(colour = "black"),
           panel.grid.major = element_line(colour = "light gray"),
           axis.title = element_text(size = 20, face = "bold"),
           axis.text = element_text(size = 16),
