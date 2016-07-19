@@ -9,6 +9,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 
+
 ###################
 # LOAD FILES
 
@@ -147,20 +148,23 @@ all_together <- function(data){
 
 # GRAPHING functions
 
+cbbPalette <- c("#E69F00", "#56B4E9", "#009E73","#CC79A7")
+
 graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
     geom_point(aes(color = LTER), size = 6) +
-    xlab("Mean Local Occupancy") + 
-    ylab("Mean Local Persistence") +
+    xlab("Mean Local Occupancy (Spactial)") + 
+    ylab("Mean Local Persistence (Temporal)") +
+    scale_color_manual(values = cbbPalette) +
     theme(panel.background = element_blank(), 
           axis.line.x = element_line(colour = "black"),
           axis.line.y = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"),
-          axis.title = element_text(size = 20, face = "bold"),
-          axis.text = element_text(size = 16),
-          legend.title = element_text(size = 16),
-          legend.text = element_text(size = 16))
+          axis.title = element_text(size = 28, face = "bold"),
+          axis.text = element_text(size = 20),
+          legend.title = element_text(size = 24),
+          legend.text = element_text(size = 20))
   return(plot)
 }
 
@@ -168,16 +172,17 @@ graph_regional <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
     geom_point(aes(color = LTER), size = 6) +
-    xlab("Regional Occupancy") + 
-    ylab("Regional Persistence") +
+    xlab("Regional Occupancy (Spatial)") + 
+    ylab("Regional Persistence (Temporal)") +
+    scale_color_manual(values = cbbPalette) +
     theme(panel.background = element_blank(), 
           axis.line.x = element_line(colour = "black"),
-          axis.line.y = element_line(colour = "black"),
+          axis.line.y = element_line(colour = "black"), 
           panel.grid.major = element_line(colour = "light gray"),
-          axis.title = element_text(size = 20, face = "bold"),
-          axis.text = element_text(size = 16),
-          legend.title = element_text(size = 16),
-          legend.text = element_text(size = 16)) 
+          axis.title = element_text(size = 28, face = "bold"),
+          axis.text = element_text(size = 20),
+          legend.title = element_text(size = 24),
+          legend.text = element_text(size = 20)) 
   return(plot)
 }
 
@@ -224,3 +229,23 @@ ggsave(file = "all_local.png", width = 13, height = 10.5)
 #}
 
 #hja <- select_data(hja_data) %>% add_siteID()
+ggthemes_data$colorblind  <- ggthemes_data$colorblind[-1]
+assignInNamespace("ggthemes_data", ggthemes_data, ns="ggthemes")
+
+ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = LTER), size = 6) +
+  xlab("Regional Occupancy") + 
+  ylab("Regional Persistence") +
+  scale_color_manual(values = cbbPalette) +
+  theme(panel.background = element_blank(), 
+        axis.line.x = element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"), 
+        panel.grid.major = element_line(colour = "light gray"),
+        axis.title = element_text(size = 28, face = "bold"),
+        axis.text = element_text(size = 20),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 24)) 
+
+cbbPalette <- c("#E69F00", "#56B4E9", "#009E73","#CC79A7")
+ggplot(diamonds, aes(clarity, fill=cut)) + geom_bar(position="dodge")+
+  scale_fill_colorblind()
