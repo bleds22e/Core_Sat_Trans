@@ -154,7 +154,7 @@ graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
     geom_point(aes(color = LTER), size = 6) +
-    xlab("Mean Local Occupancy (Spactial)") + 
+    xlab("Mean Local Occupancy (Spatial)") + 
     ylab("Mean Local Persistence (Temporal)") +
     scale_color_manual(values = cbbPalette) +
     theme(panel.background = element_blank(), 
