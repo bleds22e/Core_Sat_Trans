@@ -3,6 +3,7 @@
 # EKB, with math help from D. Harris
 
 library(dplyr)
+library(stringr)
 
 yt_sev = 20
 yt_jor = 13
@@ -57,195 +58,51 @@ sgs_yp6_min <- sgs_yp
 sgs_yp[7,] <- vec_min
 sgs_yp7_min <- sgs_yp
 
+find_range(sgs_yp1_max)
+find_range(sgs_yp2_max)
+find_range(sgs_yp3_max)
+find_range(sgs_yp4_max)
+find_range(sgs_yp5_max)
+find_range(sgs_yp6_max)
 find_range(sgs_yp7_max)
 find_range(sgs_yp1_min)
+find_range(sgs_yp2_min)
+find_range(sgs_yp3_min)
+find_range(sgs_yp4_min)
+find_range(sgs_yp5_min)
+find_range(sgs_yp6_min)
+find_range(sgs_yp7_min)
+
+#### HJA
+
+vec_max <- c(1,1,1,1,1,1,1,1,1)
+vec_min <- c(0,0,0,0,0,0,0,0,1)
+
+hja_yp <- matrix(0, nrow = 5 , ncol = 9)
+hja_yp1_max <- hja_yp %>% replace(hja_yp[1,], values = vec_max)
+hja_yp[1,] <- vec_max 
+hja_yp1_max <- hja_yp
+hja_yp[2,] <- vec_max
+hja_yp2_max <- hja_yp
+hja_yp[3,] <- vec_max
+hja_yp3_max <- hja_yp
+hja_yp[4,] <- vec_max
+hja_yp4_max <- hja_yp
+hja_yp[5,] <- vec_max
+hja_yp5_max <- hja_yp
+
+hja_yp <- matrix(0, nrow = 5 , ncol = 9)
+hja_yp1_min <- hja_yp %>% replace(hja_yp[1,], values = vec_min)
+hja_yp[1,] <- vec_min 
+hja_yp1_min <- hja_yp
+hja_yp[2,] <- vec_min
+hja_yp2_min <- hja_yp
+hja_yp[3,] <- vec_min
+hja_yp3_min <- hja_yp
+hja_yp[4,] <- vec_min
+hja_yp4_min <- hja_yp
+hja_yp[5,] <- vec_min
+hja_yp5_min <- hja_yp
+
 
 ################################################
-
-###################
-# LIBRARIES
-
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-
-###################
-# LOAD FILES
-
-jornada <- read.csv("data/Rodents/jornada_rodents.csv", header = TRUE, na.strings = ".")
-sevilleta <- read.csv("data/Rodents/sevilleta_sm_mrc.txt", header = TRUE)
-hj_andrews <- read.csv("data/Rodents/hj_andrews.csv", header = TRUE)
-shortgrass_steppe <- read.table("data/Rodents/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
-
-####################
-# PREP FILES
-
-jor_data <- select(jornada, year, season, habitat, web, spp, recap) %>% 
-  filter(recap != "Y", spp != "DIPO1", spp != "PERO1", spp != "NA")
-
-hja_data <- select(hj_andrews, YEAR, REPBLK, SUBPLOT, SPECIES) %>% 
-  filter(SPECIES != 'UNKN') 
-
-sev_data <- select(sevilleta, year, season, location, web, species, recap) %>% 
-  filter(recap != "y", species != "pgsp", species != "dipo", 
-         species != "nesp", species != "onsp", species != "pesp", 
-         species != "resp", species != "na", species != "pmsp", species != "spsp", 
-         year < 2009, location != "two22", location != "blugrama", 
-         location != "savanna", location != "goatdraw", location != "rsgrass")
-
-sgs_data <- select(shortgrass_steppe, YEAR, VEG, WEB, SPP) %>% 
-  filter(SPP != 'NA')
-
-# rename columns for consistency
-
-names(jor_data) <- c("year", "season", "plot", "subplot", "species", "recap")
-names(hja_data) <- c("year", "plot", "subplot", "species")
-names(sev_data) <- c("year", "season", "plot", "subplot", "species", "recap")
-names(sgs_data) <- c("year", "plot", "subplot", "species")
-
-#####################
-# FUNCTIONS
-
-# DATA functions
-
-select_data <- function(data){
-  # function for selecting only relevant columns
-  dat <- select(data, year, plot, subplot, species)
-  return(dat)
-}
-
-group_data <- function(data){
-  # group and arrange a dataset by species, year, plot, and subplot
-  dat <- data %>% 
-    group_by(species, year, plot, subplot) %>% 
-    arrange(species, year, plot, subplot)
-  return(dat)
-}
-
-add_siteID <- function(data){
-  # make a column with a unique location code
-  dat <- data %>% mutate(siteID = paste(plot, subplot, sep = "_"))
-  return(dat)
-}
-
-find_reg_persist <- function(data){
-  # create column for relative regional persistence (years overall)
-  dat <- select(data, species, year) %>% 
-    group_by(species, year) %>% 
-    summarise(year_count = n())
-  dat1 <- select(dat, species) %>% 
-    group_by(species) %>% 
-    summarise(years = n())
-  total_years <- length(unique(data$year))
-  dat1 <- mutate(dat1, rel_reg_persist = years/total_years)
-  return(dat1)
-}
-
-find_reg_occup <- function(data){
-  # create column for relative regional occupancy (sites overall)
-  dat <- select(data, species, siteID) %>% 
-    group_by(species, siteID) %>% 
-    summarise(site_count = n())
-  dat1 <- select(dat, species) %>% 
-    group_by(species) %>% 
-    summarise(sites = n())
-  total_sites <- length(unique(data$siteID))
-  dat1 <- mutate(dat1, rel_reg_occup = sites/total_sites)
-  return(dat1)
-}
-
-join_regionals <- function(data){
-  # combine the relative regional persistance and regional occupancy into one data frame
-  dat <- left_join(x = find_reg_persist(data), y = find_reg_occup(data), by = "species")
-  return(dat)
-}
-
-rel_local_occup <- function(data){
-  # create a column for average relative local occupancy (site by year)
-  dat <- select(data, year, species, siteID) %>% 
-    group_by(year, species) %>% 
-    summarise(site_by_year = n_distinct(siteID))
-  total_sites <- length(unique(data$siteID))
-  dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
-  dat1 <- dat %>% group_by(species) %>% 
-    summarise(mean_local_occup = mean(rel_sites_by_year))
-}
-
-
-rel_local_persist <- function(data){
-  # create a column for average relative local persistance (year by site)
-  dat <- select(data, year, species, siteID) %>% 
-    group_by(siteID, species) %>% 
-    summarise(years_by_site = n_distinct(year))
-  total_years <- length(unique(data$year))
-  dat <- mutate(dat, rel_years_by_site = years_by_site/total_years)
-  dat1 <- dat %>% group_by(species) %>% 
-    summarize(mean_local_persist = mean(rel_years_by_site))
-  return(dat1)
-}
-
-join_locals <- function(data){
-  # combine average relative local persistance and occupancy into one data frame
-  dat <- left_join(x = rel_local_persist(data), y = rel_local_occup(data), by = "species")
-  return(dat)
-}
-
-combine_all <- function(data){
-  # combine regional and local persistance and occupancy into one data frame
-  dat <- left_join(x = join_regionals(data), y = join_locals(data), by = "species")
-  return(dat)
-}
-
-all_together <- function(data){
-  # run all functions together to get the full output
-  dat <- select_data(data) # can use pipes here
-  dat <- group_data(dat)
-  dat <- add_siteID(dat)
-  dat <- combine_all(dat)
-  return(dat)
-}
-
-# GRAPHING functions
-
-graph_local <- function(data){
-  # graph of mean local persistance as a function of mean local occupancy
-  plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
-    geom_point(aes(color = LTER), size = 3) +
-    xlab("Mean Local Occupancy") + 
-    ylab("Mean Local Persistence") +
-    theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray"))
-  return(plot)
-}
-
-graph_regional <- function(data){
-  # graph of mean local persistance as a function of mean local occupancy
-  plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-    geom_point(aes(color = LTER), size = 3) +
-    xlab("Regional Occupancy") + 
-    ylab("Regional Persistence") +
-    theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray")) 
-  return(plot)
-}
-
-#####################
-# APPLY FUNCTIONS TO DATASETS
-
-# all functions for all datasets
-
-jor_data <- all_together(jor_data) # I can't figure out how to loop through these
-sev_data <- all_together(sev_data)
-hja_data <- all_together(hja_data)
-sgs_data <- all_together(sgs_data)
-
-# add a dataset column
-jor_data$LTER <- "jor"    # is there a way to do this with a loop?
-hja_data$LTER <- "hja"
-sev_data$LTER <- "sev"
-sgs_data$LTER <- "sgs"
-
-# combine all datasets into one
-all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
