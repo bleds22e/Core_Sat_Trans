@@ -206,6 +206,8 @@ sgs_data$LTER <- "Shortgrass Steppe"
 all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 
 # graph all data
+cbbPalette <- c("#E69F00", "#56B4E9", "#009E73","#CC79A7")
+
 graph_regional(all_data)
 ggsave(file = "all_regional.png", width = 13, height = 10.5)
 graph_local(all_data)
@@ -232,6 +234,7 @@ ggsave(file = "all_local.png", width = 13, height = 10.5)
 ggthemes_data$colorblind  <- ggthemes_data$colorblind[-1]
 assignInNamespace("ggthemes_data", ggthemes_data, ns="ggthemes")
 
+
 ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
   geom_point(aes(color = LTER), size = 6) +
   xlab("Regional Occupancy") + 
@@ -246,6 +249,5 @@ ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
         legend.title = element_text(size = 24),
         legend.text = element_text(size = 24)) 
 
-cbbPalette <- c("#E69F00", "#56B4E9", "#009E73","#CC79A7")
-ggplot(diamonds, aes(clarity, fill=cut)) + geom_bar(position="dodge")+
-  scale_fill_colorblind()
+
+
