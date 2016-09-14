@@ -250,7 +250,7 @@ ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
         legend.text = element_text(size = 24)) 
 
 ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-  geom_point(aes(size = adj_abund)) +
+  geom_point(aes(color = LTER, size = adj_abund)) +
   xlab("Regional Occupancy") + 
   ylab("Regional Persistence") +
   scale_color_manual(values = cbbPalette) +
@@ -263,3 +263,16 @@ ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
         legend.title = element_text(size = 24),
         legend.text = element_text(size = 24)) 
 
+ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = LTER, size = ajd_avg_abund)) +
+  xlab("Regional Occupancy") + 
+  ylab("Regional Persistence") +
+  scale_color_manual(values = cbbPalette) +
+  theme(panel.background = element_blank(), 
+        axis.line.x = element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"), 
+        panel.grid.major = element_line(colour = "light gray"),
+        axis.title = element_text(size = 28, face = "bold"),
+        axis.text = element_text(size = 20),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 24)) 
