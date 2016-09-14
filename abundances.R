@@ -106,6 +106,11 @@ hja_data <- prep_data(hja_data)
 sgs_data <- prep_data(sgs_data)
 sev_data <- prep_data(sev_data)
 
+jor_data$LTER <- "Jornada Basin"    # is there a way to do this with a loop?
+hja_data$LTER <- "H.J. Andrews"
+sev_data$LTER <- "Sevilleta"
+sgs_data$LTER <- "Shortgrass Steppe"
+
 # total overall abundance
 jor_data_abund <- adj_abundance(jor_data)
 hja_data_abund <- adj_abundance(hja_data)
@@ -117,3 +122,18 @@ jor_data_avg_abund <- adj_avg_abund(jor_data)
 hja_data_avg_abund <- adj_avg_abund(hja_data)
 sgs_data_avg_abund <- adj_avg_abund(sgs_data)
 sev_data_avg_abund <- adj_avg_abund(sev_data)
+
+# add abundance columns to dfs with persistence and occupancy
+jor_abund <- left_join(jor_data, jor_data_abund, by = "species")
+jor_abund <- left_join(jor_abund, jor_data_avg_abund, by = "species")
+
+hja_abund <- left_join(hja_data, hja_data_abund, by = "species")
+hja_abund <- left_join(hja_abund, hja_data_avg_abund, by = "species")
+
+sgs_abund <- left_join(sgs_data, sgs_data_abund, by = "species")
+sgs_abund <- left_join(sgs_abund, sgs_data_avg_abund, by = "species")
+
+sev_abund <- left_join(sev_data, sev_data_abund, by = "species")
+sev_abund <- left_join(sev_abund, sev_data_avg_abund, by = "species")
+
+all_abund_data <- bind_rows(jor_abund, hja_abund, sgs_abund, sev_abund)
