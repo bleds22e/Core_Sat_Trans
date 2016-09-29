@@ -178,22 +178,26 @@ all_together <- function(data){
 # ABUNDANCES
 
 # get occupancy and persistence (both local and regional)
-jor_data <- all_together(jor_data) 
-sev_data <- all_together(sev_data)
-hja_data <- all_together(hja_data)
-sgs_data <- all_together(sgs_data)
+jor_data2 <- all_together(jor_data) 
+sev_data2 <- all_together(sev_data)
+hja_data2 <- all_together(hja_data)
+sgs_data2 <- all_together(sgs_data)
 
 # add a dataset column
-jor_data$LTER <- "Jornada Basin"  
-hja_data$LTER <- "H.J. Andrews"
-sev_data$LTER <- "Sevilleta"
-sgs_data$LTER <- "Shortgrass Steppe"
+jor_data2$LTER <- "Jornada Basin"  
+hja_data2$LTER <- "H.J. Andrews"
+sev_data2$LTER <- "Sevilleta"
+sgs_data2$LTER <- "Shortgrass Steppe"
 
 # prep data for calculating abundances
 jor_data1 <- prep_data(jor_data)
 hja_data1 <- prep_data(hja_data)
 sgs_data1 <- prep_data(sgs_data)
 sev_data1 <- prep_data(sev_data)
+jor_data1$LTER <- "Jornada Basin"  
+hja_data1$LTER <- "H.J. Andrews"
+sev_data1$LTER <- "Sevilleta"
+sgs_data1$LTER <- "Shortgrass Steppe"
 
 # total overall abundance
 jor_data_abund <- adj_abundance(jor_data1)
@@ -208,16 +212,16 @@ sgs_data_avg_abund <- adj_avg_abund(sgs_data1)
 sev_data_avg_abund <- adj_avg_abund(sev_data1)
 
 # add abundance columns to dfs with persistence and occupancy
-jor_abund <- left_join(jor_data, jor_data_abund, by = "species")
+jor_abund <- left_join(jor_data2, jor_data_abund, by = "species")
 jor_abund <- left_join(jor_abund, jor_data_avg_abund, by = "species")
 
-hja_abund <- left_join(hja_data, hja_data_abund, by = "species")
+hja_abund <- left_join(hja_data2, hja_data_abund, by = "species")
 hja_abund <- left_join(hja_abund, hja_data_avg_abund, by = "species")
 
-sgs_abund <- left_join(sgs_data, sgs_data_abund, by = "species")
+sgs_abund <- left_join(sgs_data2, sgs_data_abund, by = "species")
 sgs_abund <- left_join(sgs_abund, sgs_data_avg_abund, by = "species")
 
-sev_abund <- left_join(sev_data, sev_data_abund, by = "species")
+sev_abund <- left_join(sev_data2, sev_data_abund, by = "species")
 sev_abund <- left_join(sev_abund, sev_data_avg_abund, by = "species")
 
 all_abund_data <- bind_rows(jor_abund, hja_abund, sgs_abund, sev_abund)
