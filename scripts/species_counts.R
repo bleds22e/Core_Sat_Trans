@@ -59,16 +59,16 @@ category_3x3 <- function(rel_sites, rel_years){
 }
 
 # read in files
-jornada <- read.csv("data/jornada_rodents.csv", header = TRUE, na.strings = ".")
+jornada <- read.csv("data/Rodents/jornada_rodents.csv", header = TRUE, na.strings = ".")
 head(jornada)
 
-sevilleta <- read.csv("data/sevilleta_sm_mrc.txt", header = TRUE)
+sevilleta <- read.csv("data/Rodents/sevilleta_sm_mrc.txt", header = TRUE)
 head(sevilleta)
 
-hj_andrews <- read.csv("data/hj_andrews.csv", header = TRUE)
+hj_andrews <- read.csv("data/Rodents/hj_andrews.csv", header = TRUE)
 head(hj_andrews)
 
-shortgrass_steppe <- read.table("data/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
+shortgrass_steppe <- read.table("data/Rodents/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
 head(shortgrass_steppe)
 
 # unique trap sessions

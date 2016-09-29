@@ -9,13 +9,14 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 
+
 ###################
 # LOAD FILES
 
-jornada <- read.csv("data/jornada_rodents.csv", header = TRUE, na.strings = ".")
-sevilleta <- read.csv("data/sevilleta_sm_mrc.txt", header = TRUE)
-hj_andrews <- read.csv("data/hj_andrews.csv", header = TRUE)
-shortgrass_steppe <- read.table("data/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
+jornada <- read.csv("data/Rodents/jornada_rodents.csv", header = TRUE, na.strings = ".")
+sevilleta <- read.csv("data/Rodents/sevilleta_sm_mrc.txt", header = TRUE)
+hj_andrews <- read.csv("data/Rodents/hj_andrews.csv", header = TRUE)
+shortgrass_steppe <- read.table("data/Rodents/SGS_LTER_smammals.txt", header = TRUE, sep = "\t", na.strings = ".")
 
 ####################
 # PREP FILES
@@ -147,27 +148,41 @@ all_together <- function(data){
 
 # GRAPHING functions
 
+cbbPalette <- c("#E69F00", "#56B4E9", "#009E73","#CC79A7")
+
 graph_local <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = mean_local_occup, y = mean_local_persist)) +
-    geom_point(aes(color = dataset), size = 3) +
-    xlab("Mean Local Occupancy") + 
-    ylab("Mean Local Persistence") +
+    geom_point(aes(color = LTER), size = 6) +
+    xlab("Mean Local Occupancy (Spatial)") + 
+    ylab("Mean Local Persistence (Temporal)") +
+    scale_color_manual(values = cbbPalette) +
     theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray"))
+          axis.line.x = element_line(colour = "black"),
+          axis.line.y = element_line(colour = "black"), 
+          panel.grid.major = element_line(colour = "light gray"),
+          axis.title = element_text(size = 28, face = "bold"),
+          axis.text = element_text(size = 20),
+          legend.title = element_text(size = 24),
+          legend.text = element_text(size = 20))
   return(plot)
 }
 
 graph_regional <- function(data){
   # graph of mean local persistance as a function of mean local occupancy
   plot <- ggplot(data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-    geom_point(aes(color = dataset), size = 3) +
-    xlab("Regional Occupancy") + 
-    ylab("Regional Persistence") +
+    geom_point(aes(color = LTER), size = 6) +
+    xlab("Regional Occupancy (Spatial)") + 
+    ylab("Regional Persistence (Temporal)") +
+    scale_color_manual(values = cbbPalette) +
     theme(panel.background = element_blank(), 
-          axis.line = element_line(colour = "black"), 
-          panel.grid.major = element_line(colour = "light gray"))
+          axis.line.x = element_line(colour = "black"),
+          axis.line.y = element_line(colour = "black"), 
+          panel.grid.major = element_line(colour = "light gray"),
+          axis.title = element_text(size = 28, face = "bold"),
+          axis.text = element_text(size = 20),
+          legend.title = element_text(size = 24),
+          legend.text = element_text(size = 20)) 
   return(plot)
 }
 
@@ -182,19 +197,21 @@ hja_data <- all_together(hja_data)
 sgs_data <- all_together(sgs_data)
 
 # add a dataset column
-jor_data$dataset <- "jor"    # is there a way to do this with a loop?
-hja_data$dataset <- "hja"
-sev_data$dataset <- "sev"
-sgs_data$dataset <- "sgs"
+jor_data$LTER <- "Jornada Basin"    # is there a way to do this with a loop?
+hja_data$LTER <- "H.J. Andrews"
+sev_data$LTER <- "Sevilleta"
+sgs_data$LTER <- "Shortgrass Steppe"
 
 # combine all datasets into one
 all_data <- bind_rows(jor_data, sev_data, hja_data, sgs_data)
 
 # graph all data
+cbbPalette <- c("#E69F00", "#56B4E9", "#009E73","#CC79A7")
+
 graph_regional(all_data)
-ggsave(file = "all_regional.png", width = 6, height = 5)
+ggsave(file = "all_regional.png", width = 13, height = 10.5)
 graph_local(all_data)
-ggsave(file = "all_local.png", width = 6, height = 5)
+ggsave(file = "all_local.png", width = 13, height = 10.5)
 
 ###################################################################
 # WORKING AREA
@@ -214,3 +231,48 @@ ggsave(file = "all_local.png", width = 6, height = 5)
 #}
 
 #hja <- select_data(hja_data) %>% add_siteID()
+ggthemes_data$colorblind  <- ggthemes_data$colorblind[-1]
+assignInNamespace("ggthemes_data", ggthemes_data, ns="ggthemes")
+
+
+ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = LTER), size = 6) +
+  xlab("Regional Occupancy") + 
+  ylab("Regional Persistence") +
+  scale_color_manual(values = cbbPalette) +
+  theme(panel.background = element_blank(), 
+        axis.line.x = element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"), 
+        panel.grid.major = element_line(colour = "light gray"),
+        axis.title = element_text(size = 28, face = "bold"),
+        axis.text = element_text(size = 20),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 24)) 
+
+ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = LTER, size = adj_abund)) +
+  xlab("Regional Occupancy") + 
+  ylab("Regional Persistence") +
+  scale_color_manual(values = cbbPalette) +
+  theme(panel.background = element_blank(), 
+        axis.line.x = element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"), 
+        panel.grid.major = element_line(colour = "light gray"),
+        axis.title = element_text(size = 28, face = "bold"),
+        axis.text = element_text(size = 20),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 24)) 
+
+ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = LTER, size = ajd_avg_abund)) +
+  xlab("Regional Occupancy") + 
+  ylab("Regional Persistence") +
+  scale_color_manual(values = cbbPalette) +
+  theme(panel.background = element_blank(), 
+        axis.line.x = element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black"), 
+        panel.grid.major = element_line(colour = "light gray"),
+        axis.title = element_text(size = 28, face = "bold"),
+        axis.text = element_text(size = 20),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 24)) 
