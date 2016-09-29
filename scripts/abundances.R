@@ -98,7 +98,6 @@ adj_avg_abund <- function(data){
   return(avg_abund)
 }
 
-
 find_reg_persist <- function(data){
   # create column for relative regional persistence (years overall)
   dat <- select(data, species, year) %>% 
@@ -141,7 +140,6 @@ rel_local_occup <- function(data){
   dat1 <- dat %>% group_by(species) %>% 
     summarise(mean_local_occup = mean(rel_sites_by_year))
 }
-
 
 rel_local_persist <- function(data){
   # create a column for average relative local persistance (year by site)
@@ -264,3 +262,20 @@ avg_abund <- ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist))
 require(cowplot)
 plot_grid(total_abund, avg_abund, align = 'h')
 ggsave(filename = "abundances.png")
+
+#########################
+# WORK AREA
+
+# SE error bars
+
+jor_data <- prep_data(jor_data)
+
+
+adj_abundance <- function(data){
+  # calculate the abundance per species, adjusted by the largest average
+  abund <- data %>% select(year, siteID, species) %>% 
+    group_by(species) %>% 
+    summarise(count = n()) %>% 
+    mutate(adj_abund = count/max(count))
+  return(abund)
+}
