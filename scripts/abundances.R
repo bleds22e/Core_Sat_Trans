@@ -229,6 +229,8 @@ all_abund_data <- bind_rows(jor_abund, hja_abund, sgs_abund, sev_abund)
 ####################
 # GRAPHS
 
+cbbPalette <- c("#009E73", "#e79f00", "#9ad0f3", "#CC79A7")
+
 total_abund <- ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
   geom_point(aes(color = LTER, size = adj_abund)) +
   ggtitle("Adjusted Total Abundance") +
@@ -272,14 +274,14 @@ ggsave(filename = "abundances.png")
 
 # SE error bars
 
-jor_data <- prep_data(jor_data)
+#jor_data <- prep_data(jor_data)
 
 
-adj_abundance <- function(data){
+#adj_abundance <- function(data){
   # calculate the abundance per species, adjusted by the largest average
-  abund <- data %>% select(year, siteID, species) %>% 
-    group_by(species) %>% 
-    summarise(count = n()) %>% 
-    mutate(adj_abund = count/max(count))
-  return(abund)
-}
+  #abund <- data %>% select(year, siteID, species) %>% 
+   # group_by(species) %>% 
+    #summarise(count = n()) %>% 
+    #mutate(adj_abund = count/max(count))
+  #return(abund)
+#}
