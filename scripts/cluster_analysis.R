@@ -15,7 +15,7 @@ source("scripts/abundance_functions.R")
 
 select_data <- function(data){
   # function for selecting only relevant columns
-  dat <- select(data, year, plot, subplot, species, weight)
+  dat <- select(data, year, plot, subplot, species, weight, LTER)
   return(dat)
 }
 
@@ -27,7 +27,7 @@ avg_weight <- function(data){
 }
 
 add_systemID <- function(data){
-  data$sp_system <- tidyr::unite(species, LTER, sep = "_")
+  data$sp_system <- tidyr::unite(data = data, species, LTER, sep = "_")
 }
 
 add_weight_system <- function(data){
@@ -49,7 +49,7 @@ join_local_reg <- function(data){
 }
 
 add_abund <- function(data){
-  dat <- left_join(x = combine_local_reg(data), y = join_abund(data), by = "species")
+  dat <- left_join(x = join_local_reg(data), y = join_abund(data), by = "species")
 }
 
 combine_all <- function(data){
@@ -96,21 +96,49 @@ names(hja_data) <- c("year", "plot", "subplot", "species", "weight")
 names(sev_data) <- c("year", "plot", "subplot", "species", "recap", "weight")
 names(sgs_data) <- c("year", "plot", "subplot", "species", "weight")
 
+jor_data$LTER <- "jor"  
+hja_data$LTER <- "hja"
+sev_data$LTER <- "sev"
+sgs_data$LTER <- "sgs"
+
 ###################
 # GET ABUNDANCES
 
-systems <- list(c(jor_data, hja_data, sev_data, sgs_data))
-full_df <- data.frame()
-
-for (data in systems){
-  dat <- all_together(data)
-  full_df <- append(dat)
-}
 
 
 ####################
 # WORK AREA
 
+
+# test <- all_together(jor_data)
+test <- prep_data(jor_data)
+test <- combine_all(jor_data)
+
+
+
+systems <- list(c(jor_data, hja_data, sev_data, sgs_data))
+full_df <- data.frame()
+
+for (i in 1:length(systems)){
+  dat <- all_together(i)
+  return(dat)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############
 library(tidyr)
 library(dplyr)
 
