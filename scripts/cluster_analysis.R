@@ -5,8 +5,6 @@
 library(tidyr)
 library(dplyr)
 library(ggplot2)
-library(raster)
-library(cluster)
 
 ###################
 # LOAD ABUNDANCE FUNCTIONS
@@ -38,6 +36,32 @@ add_weight_system <- function(data){
   return(dat)
 }
 
+join_abund <- function(data){
+  # combine the relative regional persistance and regional occupancy into one data frame
+  dat <- left_join(x = adj_abundance(data), y = adj_avg_abund(data), by = "species")
+  return(dat)
+}
+
+join_local_reg <- function(data){
+  # combine regional and local persistance and occupancy into one data frame
+  dat <- left_join(x = join_regionals(data), y = join_locals(data), by = "species")
+  return(dat)
+}
+
+add_abund <- function(data){
+  dat <- left_join(x = combine_local_reg(data), y = join_abund(data), by = "species")
+}
+
+combine_all <- function(data){
+  dat <- left_join(x = add_abund(data), y = add_weight_system(data), by = "species")
+}
+
+all_together <- function(data){
+  # run all functions together to get the full output
+  dat <- prep_data(data) %>% combine_all()
+  return(dat)
+}
+
 ###################
 # LOAD FILES
 
@@ -49,13 +73,13 @@ shortgrass_steppe <- read.table("data/Rodents/SGS_LTER_smammals.txt", header = T
 ####################
 # PREP FILES
 
-jor_data <- select(jornada, year, season, habitat, web, spp, recap, weight) %>% 
+jor_data <- select(jornada, year, habitat, web, spp, recap, weight) %>% 
   filter(recap != "Y", spp != "DIPO1", spp != "PERO1", spp != "NA")
 
 hja_data <- select(hj_andrews, YEAR, REPBLK, SUBPLOT, SPECIES, WEIGHT) %>% 
   filter(SPECIES != 'UNKN') 
 
-sev_data <- select(sevilleta, year, season, location, web, species, recap, mass) %>% 
+sev_data <- select(sevilleta, year, location, web, species, recap, mass) %>% 
   filter(recap != "y", species != "pgsp", species != "dipo", 
          species != "nesp", species != "onsp", species != "pesp", 
          species != "resp", species != "na", species != "pmsp", species != "spsp", 
@@ -67,19 +91,37 @@ sgs_data <- select(shortgrass_steppe, YEAR, VEG, WEB, SPP, WT) %>%
 
 # rename columns for consistency
 
-names(jor_data) <- c("year", "season", "plot", "subplot", "species", "recap", "weight")
+names(jor_data) <- c("year", "plot", "subplot", "species", "recap", "weight")
 names(hja_data) <- c("year", "plot", "subplot", "species", "weight")
-names(sev_data) <- c("year", "season", "plot", "subplot", "species", "recap", "weight")
+names(sev_data) <- c("year", "plot", "subplot", "species", "recap", "weight")
 names(sgs_data) <- c("year", "plot", "subplot", "species", "weight")
 
 ###################
 # GET ABUNDANCES
+
+systems <- list(c(jor_data, hja_data, sev_data, sgs_data))
+full_df <- data.frame()
+
+for (data in systems){
+  dat <- all_together(data)
+  full_df <- append(dat)
+}
+
+
+####################
+# WORK AREA
+
+library(tidyr)
+library(dplyr)
+
 
 # get occupancy and persistence (both local and regional)
 jor_data2 <- all_together(jor_data) 
 sev_data2 <- all_together(sev_data)
 hja_data2 <- all_together(hja_data)
 sgs_data2 <- all_together(sgs_data)
+
+
 
 # add a dataset column
 jor_data2$LTER <- "Jornada Basin"  
