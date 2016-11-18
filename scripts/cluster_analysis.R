@@ -20,19 +20,19 @@ select_data <- function(data){
 }
 
 avg_weight <- function(data){
-  dat <- select(data, species, weight) %>% 
-         group_by(species) %>% 
+  dat <- data %>% group_by(species) %>% 
          summarise(avg_weight = mean(weight))
   return(dat)
 }
 
 add_systemID <- function(data){
-  data$sp_system <- tidyr::unite(data = data, species, LTER, sep = "_")
+  dat <- tidyr::unite(data, sp_system, species, LTER, sep = "_", remove = FALSE)
+  dat <- ungroup(dat, year, plot, subplot) %>% select(species, sp_system) %>% unique() 
+  return(dat)
 }
 
 add_weight_system <- function(data){
-  dat <- left_join(x = data, y = avg_weight(data))
-  dat <- add_systemID(data)
+  dat <- left_join(x = add_systemID(data), y = avg_weight(data), by = "species")
   return(dat)
 }
 
@@ -52,15 +52,16 @@ add_abund <- function(data){
   dat <- left_join(x = join_local_reg(data), y = join_abund(data), by = "species")
 }
 
-combine_all <- function(data){
-  dat <- left_join(x = add_abund(data), y = add_weight_system(data), by = "species")
-}
-
 all_together <- function(data){
   # run all functions together to get the full output
-  dat <- prep_data(data) %>% combine_all()
+  dat <- prep_data(data) %>% add_abund()
   return(dat)
 }
+
+combine_all <- function(data){
+  dat <- left_join(x = data, y = add_weight_system(data), by = "species")
+}
+
 
 ###################
 # LOAD FILES
@@ -96,15 +97,26 @@ names(hja_data) <- c("year", "plot", "subplot", "species", "weight")
 names(sev_data) <- c("year", "plot", "subplot", "species", "recap", "weight")
 names(sgs_data) <- c("year", "plot", "subplot", "species", "weight")
 
+###################
+# GET ABUNDANCES
+
+jor_data <- all_together(jor_data)
+hja_data <- all_together(hja_data)
+sev_data <- all_together(sev_data)
+sgs_data <- all_together(sgs_data)
+
+###################
+# ADD WEIGHT AND SYSTEM ID
+
 jor_data$LTER <- "jor"  
 hja_data$LTER <- "hja"
 sev_data$LTER <- "sev"
 sgs_data$LTER <- "sgs"
 
-###################
-# GET ABUNDANCES
-
-
+jor_data <- combine_all(jor_data)
+hja_data <- combine_all(hja_data)
+sev_data <- combine_all(sev_data)
+sgs_data <- combine_all(sgs_data)
 
 ####################
 # WORK AREA
@@ -121,87 +133,12 @@ full_df <- data.frame()
 
 for (i in 1:length(systems)){
   dat <- all_together(i)
+  full_df[i,] <- dat
   return(dat)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##############
-library(tidyr)
-library(dplyr)
-
-
-# get occupancy and persistence (both local and regional)
-jor_data2 <- all_together(jor_data) 
-sev_data2 <- all_together(sev_data)
-hja_data2 <- all_together(hja_data)
-sgs_data2 <- all_together(sgs_data)
-
-
-
-# add a dataset column
-jor_data2$LTER <- "Jornada Basin"  
-hja_data2$LTER <- "H.J. Andrews"
-sev_data2$LTER <- "Sevilleta"
-sgs_data2$LTER <- "Shortgrass Steppe"
-
-# prep data for calculating abundances
-jor_data1 <- prep_data(jor_data)
-hja_data1 <- prep_data(hja_data)
-sgs_data1 <- prep_data(sgs_data)
-sev_data1 <- prep_data(sev_data)
-jor_data1$LTER <- "jor"  
-hja_data1$LTER <- "hja"
-sev_data1$LTER <- "sev"
-sgs_data1$LTER <- "sgs"
-
-# total overall abundance
-jor_data_abund <- adj_abundance(jor_data1)
-hja_data_abund <- adj_abundance(hja_data1)
-sgs_data_abund <- adj_abundance(sgs_data1)
-sev_data_abund <- adj_abundance(sev_data1)
-
-# average abund by site/year
-jor_data_avg_abund <- adj_avg_abund(jor_data1)
-hja_data_avg_abund <- adj_avg_abund(hja_data1)
-sgs_data_avg_abund <- adj_avg_abund(sgs_data1)
-sev_data_avg_abund <- adj_avg_abund(sev_data1)
-
-# add abundance columns to dfs with persistence and occupancy
-jor_abund <- left_join(jor_data2, jor_data_abund, by = "species")
-jor_abund <- left_join(jor_abund, jor_data_avg_abund, by = "species")
-
-hja_abund <- left_join(hja_data2, hja_data_abund, by = "species")
-hja_abund <- left_join(hja_abund, hja_data_avg_abund, by = "species")
-
-sgs_abund <- left_join(sgs_data2, sgs_data_abund, by = "species")
-sgs_abund <- left_join(sgs_abund, sgs_data_avg_abund, by = "species")
-
-sev_abund <- left_join(sev_data2, sev_data_abund, by = "species")
-sev_abund <- left_join(sev_abund, sev_data_avg_abund, by = "species")
-
-all_abund_data <- bind_rows(jor_abund, hja_abund, sgs_abund, sev_abund)
-
-###################
-# WEIGHT and SYSTEM ID
-
-
 
 ####################
 # K-MEANS CLUSTERING
 
-abund_data <- tidyr::unite(all_abund_data, col = sp_system, species, LTER, sep = "_")
 abund_data <- tibble::column_to_rownames(all_abund_data, var = "sp_system")
 z_data <- scores(all_abund_data)
