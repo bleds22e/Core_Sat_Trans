@@ -55,10 +55,10 @@ adj_avg_abund <- function(data){
 
 find_reg_persist <- function(data){
   # create column for relative regional persistence (years overall)
-  dat <- select(data, species, year, LTER) %>% 
+  dat <- select(data, species, year) %>% 
     group_by(species, year) %>% 
     summarise(year_count = n())
-  dat1 <- select(dat, species, LTER) %>% 
+  dat1 <- select(dat, species) %>% 
     group_by(species) %>% 
     summarise(years = n())
   total_years <- length(unique(data$year))
