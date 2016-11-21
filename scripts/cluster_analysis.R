@@ -27,7 +27,7 @@ avg_weight <- function(data){
 
 add_systemID <- function(data){
   dat <- tidyr::unite(data, sp_system, species, LTER, sep = "_", remove = FALSE)
-  dat <- ungroup(dat, year, plot, subplot) %>% select(species, sp_system) %>% unique() 
+  dat <- ungroup(dat, year, plot, subplot) %>% select(species, sp_system, LTER) %>% unique() 
   return(dat)
 }
 
@@ -59,7 +59,9 @@ all_together <- function(data){
 }
 
 combine_all <- function(data){
-  dat <- left_join(x = data, y = add_weight_system(data), by = "species")
+  original <- prep_data(data)
+  new <- all_together(data)
+  dat <- left_join(x = new, y = add_weight_system(original), by = c("species"))
 }
 
 
@@ -97,21 +99,13 @@ names(hja_data) <- c("year", "plot", "subplot", "species", "weight")
 names(sev_data) <- c("year", "plot", "subplot", "species", "recap", "weight")
 names(sgs_data) <- c("year", "plot", "subplot", "species", "weight")
 
-###################
-# GET ABUNDANCES
-
-jor_data <- all_together(jor_data)
-hja_data <- all_together(hja_data)
-sev_data <- all_together(sev_data)
-sgs_data <- all_together(sgs_data)
-
-###################
-# ADD WEIGHT AND SYSTEM ID
-
 jor_data$LTER <- "jor"  
 hja_data$LTER <- "hja"
 sev_data$LTER <- "sev"
 sgs_data$LTER <- "sgs"
+
+###################
+# GET ALL DATA
 
 jor_data <- combine_all(jor_data)
 hja_data <- combine_all(hja_data)
