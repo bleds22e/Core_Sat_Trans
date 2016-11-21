@@ -64,7 +64,6 @@ combine_all <- function(data){
   dat <- left_join(x = new, y = add_weight_system(original), by = c("species"))
 }
 
-
 ###################
 # LOAD FILES
 
@@ -112,27 +111,22 @@ hja_data <- combine_all(hja_data)
 sev_data <- combine_all(sev_data)
 sgs_data <- combine_all(sgs_data)
 
-####################
-# WORK AREA
+# merge into one dataframe
 
-
-# test <- all_together(jor_data)
-test <- prep_data(jor_data)
-test <- combine_all(jor_data)
-
-
-
-systems <- list(c(jor_data, hja_data, sev_data, sgs_data))
-full_df <- data.frame()
-
-for (i in 1:length(systems)){
-  dat <- all_together(i)
-  full_df[i,] <- dat
-  return(dat)
-}
+all_data <- bind_rows(jor_data, hja_data, sev_data, sgs_data)
 
 ####################
 # K-MEANS CLUSTERING
 
 abund_data <- tibble::column_to_rownames(all_abund_data, var = "sp_system")
 z_data <- scores(all_abund_data)
+
+
+
+####################
+# WORK AREA
+
+
+
+
+
