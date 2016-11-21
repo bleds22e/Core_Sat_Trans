@@ -49,7 +49,7 @@ adj_avg_abund <- function(data){
   avg_abund <- site_year_abund %>% 
     group_by(species) %>% 
     summarise(avg_abund = mean(count)) %>% 
-    mutate(ajd_avg_abund = avg_abund/max(avg_abund))
+    mutate(adj_avg_abund = avg_abund/max(avg_abund))
   return(avg_abund)
 }
 
