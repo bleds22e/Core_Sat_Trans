@@ -121,17 +121,38 @@ all_data <- bind_rows(jor_data, hja_data, sev_data, sgs_data)
 library(raster)
 library(cluster)
 
+# add row names
+
+abund_data <- tibble::column_to_rownames(all_data, var = "sp_system") 
+abund_data <- dplyr::select(abund_data, rel_reg_persist, rel_reg_occup, mean_local_persist,
+                            mean_local_occup, adj_abund, adj_avg_abund)
+
 # check normality
+
 par(mfrow = c(3,2))
 hist(all_data$rel_reg_persist)
 hist(all_data$rel_reg_occup)
 hist(all_data$mean_local_persist)
 hist(all_data$mean_local_occup)
 hist(all_data$adj_abund)
-hist(all_data$ajd_avg_abund)
+hist(all_data$adj_avg_abund)
 
-abund_data <- tibble::column_to_rownames(all_data, var = "sp_system")
-z_data <- score(all_abund_data)
+# transform data
+
+#trans1_rel_reg_persist <- log(asin(sqrt(reflect+1)))
+#trans1_rel_reg_occup <- log(asin(sqrt(reflect+1)))
+#trans_mean_local_persist <- asin(sqrt(all_data$mean_local_persist))
+#trans_mean_local_occup <- asin(sqrt(all_data$mean_local_occup))
+#trans_adj_abund <- log(all_data$adj_abund)
+#trans_adj_avg_abund <- log(all_data$adj_avg_abund)
+
+# standardize data
+
+z_data <- scale(abund_data)
+
+
+
+
 
 ####################
 # WORK AREA
