@@ -118,10 +118,20 @@ all_data <- bind_rows(jor_data, hja_data, sev_data, sgs_data)
 ####################
 # K-MEANS CLUSTERING
 
-abund_data <- tibble::column_to_rownames(all_abund_data, var = "sp_system")
-z_data <- scores(all_abund_data)
+library(raster)
+library(cluster)
 
+# check normality
+par(mfrow = c(3,2))
+hist(all_data$rel_reg_persist)
+hist(all_data$rel_reg_occup)
+hist(all_data$mean_local_persist)
+hist(all_data$mean_local_occup)
+hist(all_data$adj_abund)
+hist(all_data$ajd_avg_abund)
 
+abund_data <- tibble::column_to_rownames(all_data, var = "sp_system")
+z_data <- score(all_abund_data)
 
 ####################
 # WORK AREA
