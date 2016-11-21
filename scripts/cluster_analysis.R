@@ -150,6 +150,16 @@ hist(all_data$adj_avg_abund)
 
 z_data <- scale(abund_data)
 
+# make a scree plot
+
+scree <- rep(0, 20)
+
+for (i in 1:20){
+  scree[i] <- sum(kmeans(z_data, center = i, nstart = 25)$withinss)
+}
+
+plot(1:20, scree, type = "b", xlab = "Number of groups", 
+     ylab = "Within groups sum of squares") 
 
 
 
