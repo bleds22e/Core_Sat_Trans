@@ -164,7 +164,7 @@ for (i in 1:20){
   scree_regional[i] <- sum(kmeans(z_regional, center = i, nstart = 25)$withinss)
 }
 
-par(mfrow = c(1,2))
+par(mfrow = c(2,2))
 plot(1:10, scree_regional[1:10], type = "b", xlab = "Number of groups", 
      ylab = "Within groups sum of squares") 
 
@@ -190,7 +190,6 @@ for (i in 1:20){
   scree_local[i] <- sum(kmeans(z_local, center = i, nstart = 25)$withinss)
 }
 
-par(mfrow = c(1,1))
 plot(1:10, scree_local[1:10], type = "b", xlab = "Number of groups", 
      ylab = "Within groups sum of squares") 
 
