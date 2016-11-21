@@ -149,20 +149,61 @@ hist(all_data$adj_avg_abund)
 # standardize data
 
 z_data <- scale(abund_data)
+z_regional <- dplyr::select(as.data.frame(z_data), rel_reg_persist, rel_reg_occup, adj_abund)
+z_local <- dplyr::select(as.data.frame(z_data), mean_local_persist, mean_local_occup, adj_avg_abund)
+
+# K-MEANS CLUSTERING
+
+### Regional Data
+
+# make a scree plot
+  # two or three clusters--maybe try both
+scree_regional <- rep(0, 20)
+
+for (i in 1:20){
+  scree_regional[i] <- sum(kmeans(z_regional, center = i, nstart = 25)$withinss)
+}
+
+par(mfrow = c(1,2))
+plot(1:10, scree_regional[1:10], type = "b", xlab = "Number of groups", 
+     ylab = "Within groups sum of squares") 
+
+# silhouette plot
+  # very clearly 3 clusters
+sil_regional <- rep(0,20)
+
+for (i in 2:20){
+  sil_regional[i] <- summary(silhouette(kmeans(z_regional, centers = i, iter.max = 100, 
+                                      nstart = 25)$cluster, dist(z_data)))$avg.width
+}
+
+plot(2:10, sil_regional[2:10], type = "b", xlab = "Number of groups", ylab = "average silhouette width ")
+
+
+### Local Data_local
 
 # make a scree plot
 
-scree <- rep(0, 20)
+scree_local <- rep(0, 20)
 
 for (i in 1:20){
-  scree[i] <- sum(kmeans(z_data, center = i, nstart = 25)$withinss)
+  scree_local[i] <- sum(kmeans(z_local, center = i, nstart = 25)$withinss)
 }
 
-plot(1:20, scree, type = "b", xlab = "Number of groups", 
+par(mfrow = c(1,1))
+plot(1:10, scree_local[1:10], type = "b", xlab = "Number of groups", 
      ylab = "Within groups sum of squares") 
 
+# silhouette plot
 
+sil_local <- rep(0,20)
 
+for (i in 2:20){
+  sil_local[i] <- summary(silhouette(kmeans(z_local, centers = i, iter.max = 100, 
+                                      nstart = 25)$cluster, dist(z_data)))$avg.width
+}
+
+plot(2:10, sil_local[2:10], type = "b", xlab = "Number of groups", ylab = "average silhouette width ")
 
 ####################
 # WORK AREA
