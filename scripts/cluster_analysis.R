@@ -207,7 +207,69 @@ plot(2:10, sil_local[2:10], type = "b", xlab = "Number of groups", ylab = "avera
 ####################
 # WORK AREA
 
+### Regional
+# K-means -- 3 clusters
 
+k_regional <- kmeans(z_regional, centers = 3, iter.max = 10, nstart = 25)
+pairs(z_regional, panel = function(x, y, z) text(x, y, k_regional$cluster))
 
+# plot against PC 1&2
+  # run PCA
+pca_regional <- princomp(z_regional, cor=T)
+summary(pca_regional)
+pca_regional$loadings
+  # colors
+my.color.vector <- rep("red", times=nrow(z_regional))
+my.color.vector[k_regional$cluster==1] <- "red"
+my.color.vector[k_regional$cluster==2] <- "green"
+my.color.vector[k_regional$cluster==3] <- "blue"
+  # plot clusters
+plot(pca_regional$scores[,1], pca_regional$scores[,2], ylim=range(pca_regional$scores[,1]),xlim=range(pca_regional$scores[,1]*1.25), xlab="PC 1", ylab="PC 2", type ='n', lwd=2)
+text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
+     col=my.color.vector)
+  # plot onto biplot
+biplot(pca_regional)
+text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
+     col=my.color.vector)
+
+#############
+
+scores <- pca_regional$scores
+# gg: data frame of PC1 and PC2 scores with corresponding cluster
+gg <- data.frame(cluster=factor(k_regional$cluster), x=scores[,1], y=scores[,2])
+# calculate cluster centroid locations
+centroids <- aggregate(cbind(x,y)~cluster,data=gg,mean)
+# merge centroid locations into ggplot dataframe
+gg <- merge(gg,centroids,by="cluster",suffixes=c("",".centroid"))
+# calculate 95% confidence ellipses
+library(ellipse)
+conf.rgn  <- do.call(rbind,lapply(1:3,function(i)
+  cbind(cluster=i,ellipse(cov(gg[gg$cluster==i,2:3]),centre=as.matrix(centroids[i,2:3])))))
+conf.rgn  <- data.frame(conf.rgn)
+conf.rgn$cluster <- factor(conf.rgn$cluster)
+# plot cluster map
+library(ggplot2)
+reg_clust_3_plot <- ggplot(gg, aes(x,y, color=cluster))+
+  geom_point(size=3) +
+  geom_point(data=centroids, size=4) +
+  geom_segment(aes(x=x.centroid, y=y.centroid, xend=x, yend=y))+
+  geom_path(data=conf.rgn)
+reg_clust_3_plot
+
+reg_clust_3 <- as.data.frame(k_regional$cluster)
+names(reg_clust_3) <- c("reg_clust_3")
+all_clust_data <- dplyr::bind_cols(all_data, reg_clust_3)
+
+#############################
+# AVERAGE MASS BY CLUSTER
+
+reg_by_cluster_3 <- all_clust_data %>% 
+                    dplyr::select(reg_clust_3, rel_reg_persist, rel_reg_occup, adj_abund, avg_weight) %>% 
+                    dplyr::group_by(reg_clust_3) %>% 
+                    dplyr::summarise_each(funs(mean))
+head(reg_by_cluster_3)
+
+ggplot(all_clust_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = as.character(reg_clust_3)), size = 3)
 
 
