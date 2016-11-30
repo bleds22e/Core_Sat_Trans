@@ -275,11 +275,11 @@ gg2 <- data.frame(cluster=factor(k2_regional$cluster), x=scores[,1], y=scores[,2
 centroids <- aggregate(cbind(x,y)~cluster,data=gg2,mean)
   # merge centroid locations into ggplot dataframe
 gg2 <- merge(gg2,centroids,by="cluster",suffixes=c("",".centroid"))
-  # calculate 95% confidence ellipses
-conf.rgn  <- do.call(rbind,lapply(1:2,function(i)
-  cbind(cluster=i,ellipse(cov(gg2[gg2$cluster==i,2]),centre=as.matrix(centroids[i,2])))))
-conf.rgn  <- data.frame(conf.rgn)
-conf.rgn$cluster <- factor(conf.rgn$cluster)
+  # calculate 95% confidence ellipses -- NOT WORKING YET
+#conf.rgn  <- do.call(rbind,lapply(1:2,function(i)
+#  cbind(cluster=i,ellipse(cov(gg2[gg2$cluster==i,2]),centre=as.matrix(centroids[i,2])))))
+#conf.rgn  <- data.frame(conf.rgn)
+#conf.rgn$cluster <- factor(conf.rgn$cluster)
   # plot cluster map
 reg_clust_2_plot <- ggplot(gg2, aes(x,y, color=cluster))+
   geom_point(size=3) +
@@ -299,7 +299,7 @@ ggplot(all_clust_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
 #############################
 # AVERAGE MASS BY CLUSTER
 
-reg_by_cluster_3 <- all_clust_data %>% 
+reg_by_cluster_3 <- all_clust_data %>% # weight is showing up as NA?
                     dplyr::select(reg_clust_3, rel_reg_persist, rel_reg_occup, adj_abund, avg_weight) %>% 
                     dplyr::group_by(reg_clust_3) %>% 
                     dplyr::summarise_each(funs(mean))
