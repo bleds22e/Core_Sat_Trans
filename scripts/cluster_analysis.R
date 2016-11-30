@@ -116,7 +116,7 @@ sgs_data <- combine_all(sgs_data)
 all_data <- bind_rows(jor_data, hja_data, sev_data, sgs_data)
 
 ####################
-# K-MEANS CLUSTERING
+# PREP FOR CLUSTERING
 
 library(raster)
 library(cluster)
@@ -152,64 +152,49 @@ z_data <- scale(abund_data)
 z_regional <- dplyr::select(as.data.frame(z_data), rel_reg_persist, rel_reg_occup, adj_abund)
 z_local <- dplyr::select(as.data.frame(z_data), mean_local_persist, mean_local_occup, adj_avg_abund)
 
-# K-MEANS CLUSTERING
+## Plots for Number of Clusters
+par(mfrow = c(2,2))
 
-### Regional Data
+# Regional Data
 
 # make a scree plot
-  # two or three clusters--maybe try both
 scree_regional <- rep(0, 20)
-
 for (i in 1:20){
   scree_regional[i] <- sum(kmeans(z_regional, center = i, nstart = 25)$withinss)
 }
-
-par(mfrow = c(2,2))
 plot(1:10, scree_regional[1:10], type = "b", xlab = "Number of groups", 
      ylab = "Within groups sum of squares") 
 
 # silhouette plot
-  # very clearly 3 clusters
 sil_regional <- rep(0,20)
-
 for (i in 2:20){
   sil_regional[i] <- summary(silhouette(kmeans(z_regional, centers = i, iter.max = 100, 
                                       nstart = 25)$cluster, dist(z_data)))$avg.width
 }
-
 plot(2:10, sil_regional[2:10], type = "b", xlab = "Number of groups", ylab = "average silhouette width ")
 
-
-### Local Data_local
+# Local Data
 
 # make a scree plot
-
 scree_local <- rep(0, 20)
-
 for (i in 1:20){
   scree_local[i] <- sum(kmeans(z_local, center = i, nstart = 25)$withinss)
 }
-
 plot(1:10, scree_local[1:10], type = "b", xlab = "Number of groups", 
      ylab = "Within groups sum of squares") 
 
 # silhouette plot
-
 sil_local <- rep(0,20)
-
 for (i in 2:20){
   sil_local[i] <- summary(silhouette(kmeans(z_local, centers = i, iter.max = 100, 
-                                      nstart = 25)$cluster, dist(z_data)))$avg.width
+                                     nstart = 25)$cluster, dist(z_data)))$avg.width
 }
-
 plot(2:10, sil_local[2:10], type = "b", xlab = "Number of groups", ylab = "average silhouette width ")
 
-####################
-# WORK AREA
+#######################
+# K-MEANS CLUSTERING
 
-### Regional
-# K-means -- 3 clusters
-
+### Regional -- 3 CLUSTERS
 k_regional <- kmeans(z_regional, centers = 3, iter.max = 10, nstart = 25)
 pairs(z_regional, panel = function(x, y, z) text(x, y, k_regional$cluster))
 
@@ -232,33 +217,84 @@ biplot(pca_regional)
 text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
      col=my.color.vector)
 
-#############
+# different way to plot
 
 scores <- pca_regional$scores
-# gg: data frame of PC1 and PC2 scores with corresponding cluster
+  # gg: data frame of PC1 and PC2 scores with corresponding cluster
 gg <- data.frame(cluster=factor(k_regional$cluster), x=scores[,1], y=scores[,2])
-# calculate cluster centroid locations
+  # calculate cluster centroid locations
 centroids <- aggregate(cbind(x,y)~cluster,data=gg,mean)
-# merge centroid locations into ggplot dataframe
+  # merge centroid locations into ggplot dataframe
 gg <- merge(gg,centroids,by="cluster",suffixes=c("",".centroid"))
-# calculate 95% confidence ellipses
+  # calculate 95% confidence ellipses
 library(ellipse)
 conf.rgn  <- do.call(rbind,lapply(1:3,function(i)
   cbind(cluster=i,ellipse(cov(gg[gg$cluster==i,2:3]),centre=as.matrix(centroids[i,2:3])))))
 conf.rgn  <- data.frame(conf.rgn)
 conf.rgn$cluster <- factor(conf.rgn$cluster)
-# plot cluster map
-library(ggplot2)
+  # plot cluster map
 reg_clust_3_plot <- ggplot(gg, aes(x,y, color=cluster))+
   geom_point(size=3) +
   geom_point(data=centroids, size=4) +
   geom_segment(aes(x=x.centroid, y=y.centroid, xend=x, yend=y))+
   geom_path(data=conf.rgn)
 reg_clust_3_plot
-
+  # add cluster id to dataframe
 reg_clust_3 <- as.data.frame(k_regional$cluster)
 names(reg_clust_3) <- c("reg_clust_3")
 all_clust_data <- dplyr::bind_cols(all_data, reg_clust_3)
+
+# where the clusters fall on occupancy x persistence plot
+ggplot(all_clust_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = as.character(reg_clust_3)), size = 3)
+
+#============================================
+
+### Regional -- 2 CLUSTERS
+k2_regional <- kmeans(z_regional, centers = 2, iter.max = 10, nstart = 25)
+pairs(z_regional, panel = function(x, y, z) text(x, y, k2_regional$cluster))
+
+# plot against PC 1&2
+  # colors
+my.color.vector <- rep("red", times=nrow(z_regional))
+my.color.vector[k2_regional$cluster==1] <- "red"
+my.color.vector[k2_regional$cluster==2] <- "blue"
+  # plot clusters
+plot(pca_regional$scores[,1], pca_regional$scores[,2], ylim=range(pca_regional$scores[,1]),xlim=range(pca_regional$scores[,1]*1.25), xlab="PC 1", ylab="PC 2", type ='n', lwd=2)
+text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
+     col=my.color.vector)
+  # plot onto biplot
+biplot(pca_regional)
+text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
+     col=my.color.vector)
+
+# different way to plot
+
+gg2 <- data.frame(cluster=factor(k2_regional$cluster), x=scores[,1], y=scores[,2])
+  # calculate cluster centroid locations
+centroids <- aggregate(cbind(x,y)~cluster,data=gg2,mean)
+  # merge centroid locations into ggplot dataframe
+gg2 <- merge(gg2,centroids,by="cluster",suffixes=c("",".centroid"))
+  # calculate 95% confidence ellipses
+conf.rgn  <- do.call(rbind,lapply(1:2,function(i)
+  cbind(cluster=i,ellipse(cov(gg2[gg2$cluster==i,2]),centre=as.matrix(centroids[i,2])))))
+conf.rgn  <- data.frame(conf.rgn)
+conf.rgn$cluster <- factor(conf.rgn$cluster)
+  # plot cluster map
+reg_clust_2_plot <- ggplot(gg2, aes(x,y, color=cluster))+
+  geom_point(size=3) +
+  geom_point(data=centroids, size=4) +
+  geom_segment(aes(x=x.centroid, y=y.centroid, xend=x, yend=y))
+
+reg_clust_2_plot
+  # add cluster id to dataframe
+reg_clust_2 <- as.data.frame(k2_regional$cluster)
+names(reg_clust_2) <- c("reg_clust_2")
+all_clust_data <- dplyr::bind_cols(all__clust_data, reg_clust_2)
+
+# where the clusters fall on occupancy x persistence plot
+ggplot(all_clust_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+  geom_point(aes(color = as.character(reg_clust_2)), size = 3)
 
 #############################
 # AVERAGE MASS BY CLUSTER
@@ -268,8 +304,5 @@ reg_by_cluster_3 <- all_clust_data %>%
                     dplyr::group_by(reg_clust_3) %>% 
                     dplyr::summarise_each(funs(mean))
 head(reg_by_cluster_3)
-
-ggplot(all_clust_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-  geom_point(aes(color = as.character(reg_clust_3)), size = 3)
 
 
