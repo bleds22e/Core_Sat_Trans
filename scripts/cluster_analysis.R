@@ -64,6 +64,20 @@ combine_all <- function(data){
   dat <- left_join(x = new, y = add_weight_system(original), by = c("species"))
 }
 
+# Plotting function
+line2user <- function(line, side) {
+  lh <- par('cin')[2] * par('cex') * par('lheight')
+  x_off <- diff(grconvertX(0:1, 'inches', 'user'))
+  y_off <- diff(grconvertY(0:1, 'inches', 'user'))
+  switch(side,
+         `1` = par('usr')[3] - line * y_off * lh,
+         `2` = par('usr')[1] - line * x_off * lh,
+         `3` = par('usr')[4] + line * y_off * lh,
+         `4` = par('usr')[2] + line * x_off * lh,
+         stop("side must be 1, 2, 3, or 4", call.=FALSE))
+}
+
+
 ###################
 # LOAD FILES
 
@@ -89,7 +103,7 @@ sev_data <- select(sevilleta, year, location, web, species, recap, mass) %>%
          location != "savanna", location != "goatdraw", location != "rsgrass")
 
 sgs_data <- select(shortgrass_steppe, YEAR, VEG, WEB, SPP, WT) %>% 
-  filter(SPP != 'NA')
+  filter(SPP != 'NA', SPP != "SOSP")
 
 # rename columns for consistency
 
@@ -162,8 +176,8 @@ scree_regional <- rep(0, 20)
 for (i in 1:20){
   scree_regional[i] <- sum(kmeans(z_regional, center = i, nstart = 25)$withinss)
 }
-plot(1:10, scree_regional[1:10], type = "b", xlab = "Number of groups", 
-     ylab = "Within groups sum of squares") 
+plot(1:10, scree_regional[1:10], type = "b", xlab = "Number of Groups", 
+     ylab = "Within-groups Sum of Squares") 
 
 # silhouette plot
 sil_regional <- rep(0,20)
@@ -171,7 +185,10 @@ for (i in 2:20){
   sil_regional[i] <- summary(silhouette(kmeans(z_regional, centers = i, iter.max = 100, 
                                       nstart = 25)$cluster, dist(z_data)))$avg.width
 }
-plot(2:10, sil_regional[2:10], type = "b", xlab = "Number of groups", ylab = "average silhouette width ")
+plot(2:10, sil_regional[2:10], type = "b", xlab = "Number of Groups", ylab = "Avg. Silhouette Width")
+
+text(line2user(line=mean(par('mar')[c(2, 4)]), side=2), 
+     line2user(line=2, side=3), 'Regional Scale', xpd=NA, cex=2, font=2)
 
 # Local Data
 
@@ -180,16 +197,21 @@ scree_local <- rep(0, 20)
 for (i in 1:20){
   scree_local[i] <- sum(kmeans(z_local, center = i, nstart = 25)$withinss)
 }
-plot(1:10, scree_local[1:10], type = "b", xlab = "Number of groups", 
-     ylab = "Within groups sum of squares") 
+plot(1:10, scree_local[1:10], type = "b", xlab = "Number of Groups", 
+     ylab = "Within-groups Sum of Squares") 
 
 # silhouette plot
 sil_local <- rep(0,20)
 for (i in 2:20){
-  sil_local[i] <- summary(silhouette(kmeans(z_local, centers = i, iter.max = 100, 
-                                     nstart = 25)$cluster, dist(z_data)))$avg.width
+  sil_local[i] <- summary(silhouette(kmeans(z_local, centers = i, iter.max = 100, nstart = 25)$cluster, dist(z_data)))$avg.width
 }
-plot(2:10, sil_local[2:10], type = "b", xlab = "Number of groups", ylab = "average silhouette width ")
+plot(2:10, sil_local[2:10], type = "b", xlab = "Number of Groups", ylab = "Avg. Silhouette Width")
+
+text(line2user(line=mean(par('mar')[c(2, 4)]), side=2), 
+     line2user(line=2, side=3), 'Local Scale', xpd=NA, cex=2, font=2)
+
+#dev.copy(png, "scree_and_silh.png")
+#dev.off()
 
 #######################
 # K-MEANS CLUSTERING
