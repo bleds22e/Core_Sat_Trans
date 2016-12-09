@@ -34,7 +34,7 @@ sev_data <- select(sevilleta, year, season, location, web, species, recap) %>%
          location != "savanna", location != "goatdraw", location != "rsgrass")
 
 sgs_data <- select(shortgrass_steppe, YEAR, VEG, WEB, SPP) %>% 
-  filter(SPP != 'NA')
+  filter(SPP != 'NA', SPP != "SOSP")
 
 # rename columns for consistency
 
