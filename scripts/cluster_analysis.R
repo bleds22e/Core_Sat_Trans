@@ -205,6 +205,8 @@ text(line2user(line=mean(par('mar')[c(2, 4)]), side=2),
 ### Regional -- 3 CLUSTERS
 k_regional <- kmeans(z_regional, centers = 3, iter.max = 10, nstart = 25)
 pairs(z_regional, panel = function(x, y, z) text(x, y, k_regional$cluster))
+#dev.copy(png, "scatter_plot_regional.png")
+#dev.off()
 
 # plot against PC 1&2
   # run PCA
@@ -221,7 +223,7 @@ plot(pca_regional$scores[,1], pca_regional$scores[,2], ylim=range(pca_regional$s
 text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
      col=my.color.vector)
   # plot onto biplot
-biplot(pca_regional)
+biplot(pca_regional, xlabs = rep("", 66), xlim = range(-.35, .35))
 text(pca_regional$scores[,1], pca_regional$scores[,2], labels=rownames(z_regional), cex=1.25, lwd=2,
      col=my.color.vector)
 
@@ -245,7 +247,9 @@ reg_clust_3_plot <- ggplot(gg, aes(x,y, color=cluster))+
   geom_point(size=3) +
   geom_point(data=centroids, size=4) +
   geom_segment(aes(x=x.centroid, y=y.centroid, xend=x, yend=y))+
-  geom_path(data=conf.rgn)
+  geom_path(data=conf.rgn) +
+  xlab("PC1") +
+  ylab("PC2")
 reg_clust_3_plot
   # add cluster id to dataframe
 reg_clust_3 <- as.data.frame(k_regional$cluster)
@@ -370,3 +374,4 @@ all_clust_data <- dplyr::bind_cols(all_data, reg_clust_3)
 ggplot(all_clust_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
   geom_point(aes(color = as.character(reg_clust_3)), size = 3)
 
+######################################################
