@@ -16,7 +16,7 @@ st_sgs = 7
 st_hja = 9
 
 find_range <- function(matrix){
-  num <- sum(rowMeans(matrix)) / sum(rowSums(matrix) > 0)
+  num <- sum(rowMeans(matrix) / sum(rowSums(matrix) > 0))
   return(num)
 }
 
@@ -103,6 +103,19 @@ hja_yp[4,] <- vec_min
 hja_yp4_min <- hja_yp
 hja_yp[5,] <- vec_min
 hja_yp5_min <- hja_yp
+
+find_range(hja_yp1_max)
+find_range(hja_yp2_max)
+find_range(hja_yp3_max)
+find_range(hja_yp4_max)
+find_range(hja_yp5_max)
+find_range(hja_yp1_min)
+find_range(hja_yp2_min)
+find_range(hja_yp3_min)
+find_range(hja_yp4_min)
+find_range(hja_yp5_min)
+
+
 
 
 ################################################
