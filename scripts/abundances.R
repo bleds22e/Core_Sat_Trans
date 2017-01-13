@@ -167,10 +167,7 @@ combine_all <- function(data){
 
 all_together <- function(data){
   # run all functions together to get the full output
-  dat <- select_data(data) # can use pipes here
-  dat <- group_data(dat)
-  dat <- add_siteID(dat)
-  dat <- combine_all(dat)
+  dat <- select_data(data) %>% group_data() %>% add_siteID() %>% combine_all()
   return(dat)
 }
 
@@ -274,14 +271,26 @@ ggsave(filename = "abundances.png")
 
 # SE error bars
 
-#jor_data <- prep_data(jor_data)
+#rel_local_occup <- function(data){
+  # create a column for average relative local occupancy (site by year)
+  dat <- select(jor_data1, year, species, siteID) %>% 
+    group_by(year, species) %>% 
+    summarise(site_by_year = n_distinct(siteID))
+  total_sites <- n_distinct(data$siteID)
+  dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
+  dat1 <- dat %>% group_by(species) %>% 
+    summarise(mean_local_occup = mean(rel_sites_by_year), 
+              SE_local_occup = (sd(rel_sites_by_year)/sqrt(n(rel_sites_by_year))))
+
+#rel_local_persist
+  # create a column for average relative local persistance (year by site)
+  dat <- select(data, year, species, siteID) %>% 
+    group_by(siteID, species) %>% 
+    summarise(years_by_site = n_distinct(year))
+  total_years <- length(unique(data$year))
+  dat <- mutate(dat, rel_years_by_site = years_by_site/total_years)
+  dat1 <- dat %>% group_by(species) %>% 
+    summarize(mean_local_persist = mean(rel_years_by_site))
+  return(dat1)
 
 
-#adj_abundance <- function(data){
-  # calculate the abundance per species, adjusted by the largest average
-  #abund <- data %>% select(year, siteID, species) %>% 
-   # group_by(species) %>% 
-    #summarise(count = n()) %>% 
-    #mutate(adj_abund = count/max(count))
-  #return(abund)
-#}
