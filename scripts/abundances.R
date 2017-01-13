@@ -276,12 +276,11 @@ ggsave(filename = "abundances.png")
   dat <- select(jor_data1, year, species, siteID) %>% 
     group_by(year, species) %>% 
     summarise(site_by_year = n_distinct(siteID))
-  total_sites <- n_distinct(data$siteID)
+  total_sites <- length(unique(jor_data1$siteID))
   dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
   dat1 <- dat %>% group_by(species) %>% 
-    summarise(mean_local_occup = mean(rel_sites_by_year), 
-              SE_local_occup = (sd(rel_sites_by_year)/sqrt(n(rel_sites_by_year))))
-
+          summarise_at(vars(rel_sites_by_year), funs(mean, sd))
+  
 #rel_local_persist
   # create a column for average relative local persistance (year by site)
   dat <- select(data, year, species, siteID) %>% 
