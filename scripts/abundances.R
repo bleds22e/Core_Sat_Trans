@@ -139,6 +139,7 @@ rel_local_occup <- function(data){
   dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
   dat1 <- dat %>% group_by(species) %>% 
     summarise(mean_local_occup = mean(rel_sites_by_year))
+  return(dat1)
 }
 
 rel_local_persist <- function(data){
@@ -155,7 +156,7 @@ rel_local_persist <- function(data){
 
 join_locals <- function(data){
   # combine average relative local persistance and occupancy into one data frame
-  dat <- left_join(x = rel_local_persist(data), y = rel_local_occup(data), by = "species")
+  dat <- left_join(x = mean_sd_local_persist(data), y = mean_sd_local_occup(data), by = "species")
   return(dat)
 }
 
@@ -271,25 +272,30 @@ ggsave(filename = "abundances.png")
 
 # SE error bars
 
-#rel_local_occup <- function(data){
+mean_sd_local_occup <- function(data){
   # create a column for average relative local occupancy (site by year)
-  dat <- select(jor_data1, year, species, siteID) %>% 
+  dat <- select(data, year, species, siteID) %>% 
     group_by(year, species) %>% 
     summarise(site_by_year = n_distinct(siteID))
-  total_sites <- length(unique(jor_data1$siteID))
+  total_sites <- length(unique(data$siteID))
   dat <- mutate(dat, rel_sites_by_year = site_by_year/total_sites)
   dat1 <- dat %>% group_by(species) %>% 
           summarise_at(vars(rel_sites_by_year), funs(mean, sd))
-  
-#rel_local_persist
+  names(dat1) <- c("species", "mean_local_occup", "sd_local_occup")
+  return(dat1)
+}
+
+mean_sd_local_persist <- function(data){
   # create a column for average relative local persistance (year by site)
-  dat <- select(data, year, species, siteID) %>% 
+  dat2 <- select(data, year, species, siteID) %>% 
     group_by(siteID, species) %>% 
     summarise(years_by_site = n_distinct(year))
   total_years <- length(unique(data$year))
-  dat <- mutate(dat, rel_years_by_site = years_by_site/total_years)
-  dat1 <- dat %>% group_by(species) %>% 
-    summarize(mean_local_persist = mean(rel_years_by_site))
-  return(dat1)
+  dat2 <- mutate(dat2, rel_years_by_site = years_by_site/total_years)
+  dat3 <- dat2 %>% group_by(species) %>% 
+    summarise_at(vars(rel_years_by_site), funs(mean, sd))
+  names(dat3) <- c("species", "mean_local_persist", "sd_local_persist")
+  return(dat3)
+}
 
-
+dat4 <- inner_join(dat1, dat3, by = "species")
