@@ -234,11 +234,17 @@ ggsave(file = "all_local.png", width = 13, height = 10.5)
 ggthemes_data$colorblind  <- ggthemes_data$colorblind[-1]
 assignInNamespace("ggthemes_data", ggthemes_data, ns="ggthemes")
 
+all_data <- all_data %>% mutate(ymin = mean_local_persist - sd_local_persist, 
+                                ymax = mean_local_persist + sd_local_persist,
+                                xmin = mean_local_occup - sd_local_occup,
+                                xmax = mean_local_occup + sd_local_occup)
 
-ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
+ggplot(all_data, aes(x = mean_local_occup, y = mean_local_persist)) +
   geom_point(aes(color = LTER), size = 6) +
-  xlab("Regional Occupancy") + 
-  ylab("Regional Persistence") +
+  geom_errorbar(aes(ymax = ymax, ymin = ymin))+
+  geom_errorbarh(aes(xmin = xmin, xmax = xmax)) +
+  xlab("Local Occupancy") + 
+  ylab("Local Persistence") +
   scale_color_manual(values = cbbPalette) +
   theme(panel.background = element_blank(), 
         axis.line.x = element_line(colour = "black"),
@@ -248,31 +254,5 @@ ggplot(all_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
         axis.text = element_text(size = 20),
         legend.title = element_text(size = 24),
         legend.text = element_text(size = 24)) 
-
-ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-  geom_point(aes(color = LTER, size = adj_abund)) +
-  xlab("Regional Occupancy") + 
-  ylab("Regional Persistence") +
-  scale_color_manual(values = cbbPalette) +
-  theme(panel.background = element_blank(), 
-        axis.line.x = element_line(colour = "black"),
-        axis.line.y = element_line(colour = "black"), 
-        panel.grid.major = element_line(colour = "light gray"),
-        axis.title = element_text(size = 28, face = "bold"),
-        axis.text = element_text(size = 20),
-        legend.title = element_text(size = 24),
-        legend.text = element_text(size = 24)) 
-
-ggplot(all_abund_data, aes(x = rel_reg_occup, y = rel_reg_persist)) +
-  geom_point(aes(color = LTER, size = ajd_avg_abund)) +
-  xlab("Regional Occupancy") + 
-  ylab("Regional Persistence") +
-  scale_color_manual(values = cbbPalette) +
-  theme(panel.background = element_blank(), 
-        axis.line.x = element_line(colour = "black"),
-        axis.line.y = element_line(colour = "black"), 
-        panel.grid.major = element_line(colour = "light gray"),
-        axis.title = element_text(size = 28, face = "bold"),
-        axis.text = element_text(size = 20),
-        legend.title = element_text(size = 24),
-        legend.text = element_text(size = 24)) 
+dev.copy(png, "plots/local_sd_error.png", width = 800, height = 550)
+dev.off()
