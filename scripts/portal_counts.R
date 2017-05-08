@@ -103,6 +103,7 @@ ggplot(portal_total_rel_data, aes(x = rel_sites, y = rel_years)) +
   xlab("Relative Number of Sites Occupied") + 
   ylab("Relative Number of Years Present") +
   ggtitle("Portal: Control Only") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -113,6 +114,7 @@ ggplot(portal_total_rel_data, aes(x = mean_rel_sites, y = rel_years)) +
   xlab("Relative Number of Sites Occupied Per Year") + 
   ylab("Relative Number of Years Present") +
   ggtitle("Portal: Control Only") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -123,6 +125,7 @@ ggplot(portal_total_rel_data, aes(x = rel_sites, y = mean_rel_years)) +
   xlab("Relative Number of Sites Occupied") + 
   ylab("Relative Number of Years Present Per Site") +
   ggtitle("Portal: Control Only") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -133,6 +136,7 @@ ggplot(portal_total_rel_data, aes(x = mean_rel_sites, y = mean_rel_years)) +
   xlab("Relative Number of Sites Occupied Per Site") + 
   ylab("Relative Number of Years Present Per Site") +
   ggtitle("Portal: Control Only") +
+  geom_label(aes(label = species))+
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -224,6 +228,7 @@ ggplot(portal_total_rel_data1, aes(x = rel_sites, y = rel_years)) +
   xlab("Relative Number of Sites Occupied") + 
   ylab("Relative Number of Years Present") +
   ggtitle("Portal: Control & Krat Exclosure") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -234,6 +239,7 @@ ggplot(portal_total_rel_data1, aes(x = mean_rel_sites, y = rel_years)) +
   xlab("Relative Number of Sites Occupied Per Year") + 
   ylab("Relative Number of Years Present") +
   ggtitle("Portal: Control & Krat Exclosure") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -244,6 +250,7 @@ ggplot(portal_total_rel_data1, aes(x = rel_sites, y = mean_rel_years)) +
   xlab("Relative Number of Sites Occupied") + 
   ylab("Relative Number of Years Present Per Site") +
   ggtitle("Portal: Control & Krat Exclosure") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
@@ -251,9 +258,10 @@ ggsave(file = "portal1_mean_rel_year.png", width = 6, height = 5)
 
 ggplot(portal_total_rel_data1, aes(x = mean_rel_sites, y = mean_rel_years)) +
   geom_point(size = 3) +
-  xlab("Relative Number of Sites Occupied Per Site") + 
+  xlab("Relative Number of Sites Occupied Per Year") + 
   ylab("Relative Number of Years Present Per Site") +
   ggtitle("Portal: Control & Krat Exclosure") +
+  geom_label(aes(label = species)) +
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"), 
         panel.grid.major = element_line(colour = "light gray"))
