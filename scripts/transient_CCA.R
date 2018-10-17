@@ -144,7 +144,8 @@ NDVI_transient_rel_abund$date = as.yearmon(NDVI_transient_rel_abund$date)
 
 ######  !!!
 # need to add missing yearmon values
-# follow procedure on stack overflow before continuing
+# follow procedure on stack overflow 
+# then do full_join (?) to get missing dates as well as repeated dates
 
 
 # quantiles
