@@ -3,8 +3,10 @@
 # Oct 2018
 
 # LIBRARIES #
-library(devtools)
+library(RCurl)
 library(tidyverse)
+library(stringr)
+library(zoo)
 
 # FUNCTION #
 
@@ -23,8 +25,8 @@ find_reg_persist <- function(data){
 
 # GET DATA #
 
-rdat <- read.csv("~bleds22e/Dropbox (UFL)/Git/PortalData/Rodents/Portal_rodent.csv", na.strings = '')
-NDVI <- read.csv("~bleds22e/Dropbox (UFL)/Git/PortalData/NDVI/monthly_NDVI.csv")
+rdat <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent.csv"), na.strings = '')
+NDVI <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/NDVI/monthly_NDVI.csv"))
 
 #===============================================================
 
@@ -46,10 +48,10 @@ comm2_persist <- filter(comm2, abundance > 0) %>%
 comm3_persist <- filter(comm3, abundance > 0) %>% 
   find_reg_persist()
 
-par(mfrow = c(3,1))
-hist(comm1_persist$rel_reg_persist)
-hist(comm2_persist$rel_reg_persist)
-hist(comm3_persist$rel_reg_persist)
+# par(mfrow = c(3,1))
+# hist(comm1_persist$rel_reg_persist)
+# hist(comm2_persist$rel_reg_persist)
+# hist(comm3_persist$rel_reg_persist)
 
 #dev.copy(png, "plots/hist_portal_comms.png")
 #dev.off()
@@ -139,29 +141,61 @@ NDVI2 <- filter(NDVI_peak, date %in% unique(abund_dates2$date))
 NDVI3 <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
 NDVI_all <- bind_rows(NDVI1, NDVI2, NDVI3)
 
-NDVI_transient_rel_abund <- inner_join(abund_dates, NDVI_all, by = "date")
-NDVI_transient_rel_abund$date = as.yearmon(NDVI_transient_rel_abund$date)
+combined_data <- inner_join(abund_dates, NDVI_all, by = "date")
+combined_data$date = as.yearmon(combined_data$date)
 
-######  !!!
-# need to add missing yearmon values
-# follow procedure on stack overflow 
-# then do full_join (?) to get missing dates as well as repeated dates
+# deal with periods that have two different months
+# select first month out of the two?
 
+combined_data <- combined_data[!duplicated(combined_data$period),]
+
+# get all yearmon dates
+all_dates <- as.data.frame(seq(as.yearmon(min(NDVI_peak$date)), as.yearmon(max(NDVI_peak$date)), by = 1/12))
+colnames(all_dates) = c("date")
+
+combined_data <- full_join(all_dates, combined_data, by = "date")
+combined_data <- combined_data[-c(1:30),]
 
 # quantiles
-
 upper <- as.numeric(quantile(NDVI_peak$NDVIpeak, .75))
 lower <- as.numeric(quantile(NDVI_peak$NDVIpeak, .25))
 
-NDVI_peak$NDVI_quantiles = NA
-for (i in 1:length(NDVI_peak$NDVIpeak)){
-  if (NDVI_peak$NDVIpeak[i] > upper){
-    NDVI_peak$NDVI_quantiles[i] = NDVI_peak$NDVIpeak[i]
-  } else {
-    NDVI_peak$NDVI_quantiles[i] = NA
+# are there NDVI values to put in even if there aren't transient values?
+
+combined_data$NDVI_quantiles = NA
+
+for (i in 1:length(combined_data$NDVIpeak)){
+  if (!is.na(combined_data$NDVIpeak[i])){
+    if (combined_data$NDVIpeak[i] > upper){
+      combined_data$NDVI_quantiles[i] = combined_data$NDVIpeak[i]
+    } else {
+      combined_data$NDVI_quantiles[i] = NA
+    }
   }
 }
 
+
+
+
+# first try to get pulse ID
+# then can work from there fairly easily, I think
+combined_data$pulseID <- NA
+pulseID = 0
+
+for (i in 1:length(combined_data$date)){
+  
+  pulseID = pulseID + 1
+  
+  if (!is.na(combined_data$NDVI_quantiles[i])){
+    if(is.na(combinded_data$pulseID[i-1])){
+      combined_data$pulseID[i] <- pulseID
+    } else{
+      combined_data$pulseID[i] <- combined_data$pulseID[i-1]
+    }
+    
+  }
+  
+}
 
 
 
@@ -177,7 +211,6 @@ pulses <- data.frame(pulseID = integer(),
                      transientT4 = numeric(),
                      transientT5 = numeric())
 
-NDVI_peak <- NDVI_peak[-c(1:18),]
 
 #====================================================================
 # Working Area #
