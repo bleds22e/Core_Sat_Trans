@@ -1,16 +1,10 @@
-# Transient & NDVI experimentation
+# Transient CCA
 # EKB
-# Sept 2017
+# Oct 2018
 
 # LIBRARIES #
-
-library(dplyr)
-library(ggplot2)
-library(zoo)
-library(gridExtra)
-library(stringr)
-source('scripts/data_processing.R')
-source('scripts/RodentAbundances.R')
+library(devtools)
+library(tidyverse)
 
 # FUNCTION #
 
@@ -35,7 +29,7 @@ NDVI <- read.csv("~bleds22e/Dropbox (UFL)/Git/PortalData/NDVI/monthly_NDVI.csv")
 #===============================================================
 
 abund <- portalr::abundance(path = "repo", level = "Site", type = "Rodents",
-                  plots = "all", unknowns = F, shape = "flat", time = "period")
+                            plots = "all", unknowns = F, shape = "flat", time = "period")
 
 # BREAK UP COMMUNITIES BY LDA
 
@@ -132,19 +126,60 @@ NDVI <- select(NDVI, year, month, ndvi) %>%
   tidyr::unite(date, year, month, sep = '-') %>% 
   distinct()
 
-
 # filter NDVI by community dates
 abund_dates1 <- inner_join(rel_abund_transients1, dates, by = 'period') 
 abund_dates2 <- inner_join(rel_abund_transients2, dates, by = 'period') 
 abund_dates3 <- inner_join(rel_abund_transients3, dates, by = 'period') 
+abund_dates <- bind_rows(abund_dates1, abund_dates2, abund_dates3)
+
+NDVI_peak <- mutate(NDVI, NDVIpeak = ndvi - median(ndvi))
+
+NDVI1 <- filter(NDVI_peak, date %in% unique(abund_dates1$date))
+NDVI2 <- filter(NDVI_peak, date %in% unique(abund_dates2$date))
+NDVI3 <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
+NDVI_all <- bind_rows(NDVI1, NDVI2, NDVI3)
+
+NDVI_transient_rel_abund <- inner_join(abund_dates, NDVI_all, by = "date")
+NDVI_transient_rel_abund$date = as.yearmon(NDVI_transient_rel_abund$date)
+
+######  !!!
+# need to add missing yearmon values
+# follow procedure on stack overflow before continuing
 
 
-NDVI1 <- filter(NDVI, date %in% unique(abund_dates1$date))
-NDVI2 <- filter(NDVI, date %in% unique(abund_dates2$date))
-NDVI3 <- filter(NDVI, date %in% unique(abund_dates3$date))
+# quantiles
+
+upper <- as.numeric(quantile(NDVI_peak$NDVIpeak, .75))
+lower <- as.numeric(quantile(NDVI_peak$NDVIpeak, .25))
+
+NDVI_peak$NDVI_quantiles = NA
+for (i in 1:length(NDVI_peak$NDVIpeak)){
+  if (NDVI_peak$NDVIpeak[i] > upper){
+    NDVI_peak$NDVI_quantiles[i] = NDVI_peak$NDVIpeak[i]
+  } else {
+    NDVI_peak$NDVI_quantiles[i] = NA
+  }
+}
 
 
-# PLOT DATA #
+
+
+
+# make outline of data frame
+pulses <- data.frame(pulseID = integer(),
+                     pulseMax = numeric(),
+                     pulseDuration = integer(),
+                     pulseSum = numeric(),
+                     transientT1 = numeric(),
+                     tranisentT2 = numeric(),
+                     transientT3 = numeric(),
+                     transientT4 = numeric(),
+                     transientT5 = numeric())
+
+NDVI_peak <- NDVI_peak[-c(1:18),]
+
+#====================================================================
+# Working Area #
 
 NDVI1$date = as.yearmon(NDVI1$date)
 NDVI2$date = as.yearmon(NDVI2$date)
@@ -153,76 +188,4 @@ abund_dates1$date = as.yearmon(abund_dates1$date)
 abund_dates2$date = as.yearmon(abund_dates2$date)
 abund_dates3$date = as.yearmon(abund_dates3$date)
 
-(comm2_plot <- ggplot(data = NDVI2, aes(x = date, y = ndvi)) +
-  geom_line(aes(color = 'NDVI')) +
-  geom_point(data = abund_dates2, aes(x = date, y = transient_rel_abund, color = 'rel_abund'), size = 1) +
-  ggtitle('2000-2009') +
-  scale_color_manual(values = c(NDVI = '#333333', rel_abund = '#00CC00')) +
-  ylab('NDVI value / Rel.Abund') +
-  theme_bw())
-
-#transient_comms <- grid.arrange(comm1_plot, comm2_plot, comm3_plot, nrow = 3)
-#ggsave("plots/transient_comms_noPBcomm1.png", plot = transient_comms)
-
-#===========================================================
-
-# NDVI LENGTH # 
-
-library(forecast)
-
-NDVI_ts = ts(NDVI$ndvi, start = c(1992, 3), end = c(2015, 12), frequency = 12)
-NDVI1_ts = ts(NDVI1$ndvi, start = c(1992, 3), end = c(1999, 12), frequency = 12)
-NDVI2_ts = ts(NDVI2$ndvi, start = c(2000, 1), end = c(2009, 12), frequency = 12)
-NDVI3_ts = ts(NDVI3$ndvi, start = c(2010, 1), end = c(2015, 12), frequency = 12)
-comm1_ts = ts(abund_dates1$transient_rel_abund, start = c(1984, 2), end = c(1999, 12), frequency = 12)
-comm2_ts = ts(abund_dates2$transient_rel_abund, start = c(2000, 1), end = c(2009, 12), frequency = 12)
-comm3_ts = ts(abund_dates3$transient_rel_abund, start = c(2010, 1), end = c(2015, 12), frequency = 12)
-
-NDVI_peak <- mutate(NDVI, NDVIpeak = ndvi - median(ndvi))
 NDVI_peak$date = as.yearmon(NDVI_peak$date)
-
-NDVI1_peak <- filter(NDVI_peak, date %in% unique(abund_dates1$date))
-NDVI1_peak_ts = ts(NDVI1_peak$NDVIpeak, start = c(1992, 3), end = c(1999, 12), frequency = 12)
-NDVI2_peak <- filter(NDVI_peak, date %in% unique(abund_dates2$date))
-NDVI2_peak_ts = ts(NDVI2_peak$NDVIpeak, start = c(2000, 1), end = c(2009, 12), frequency = 12)
-NDVI3_peak <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
-NDVI3_peak_ts = ts(NDVI3_peak$NDVIpeak, start = c(2010, 1), end = c(2015, 12), frequency = 12)
-
-NDVI_all_peak <- bind_rows(NDVI1_peak, NDVI2_peak, NDVI3_peak)
-
-par(mfrow = c(3,2))
-ccf(NDVI1_peak_ts, comm1_ts)
-plot(NDVI1_peak_ts)
-lines(comm1_ts, col = 'blue')
-points(comm1_ts, col = 'blue')
-ccf(NDVI2_ts, comm2_ts)
-plot(NDVI2_peak_ts)
-lines(comm2_ts, col = 'blue')
-points(comm2_ts, col = 'blue')
-ccf(NDVI3_ts, comm3_ts)
-plot(NDVI3_peak_ts)
-par(new = TRUE)
-lines(comm3_ts, col = 'blue')
-points(comm3_ts, col = 'blue')
-
-#dev.copy(png, "plots/ccf_and_relabund_plots.png")
-#dev.off()
-
-# plots
-
-# NDVI1_peak$date = as.yearmon(NDVI1_peak$date)
-# NDVI2_peak$date = as.yearmon(NDVI2_peak$date)
-# NDVI3_peak$date = as.yearmon(NDVI3_peak$date)
-# 
-# (comm2_plot <- ggplot(data = NDVI2_peak, aes(x = date, y = NDVIpeak)) +
-#     geom_line(aes(color = 'NDVIpeak')) +
-#     geom_point(data = abund_dates2, aes(x = date, y = transient_rel_abund, color = 'rel_abund'), size = 1) +
-#     ggtitle('2000-2009') +
-#     scale_color_manual(values = c(NDVIpeak = '#333333', rel_abund = '#00CC00')) +
-#     ylab('NDVI value / Rel.Abund') +
-#     theme_bw())
-# 
-# transient_comms <- grid.arrange(comm1_plot, comm2_plot, comm3_plot, nrow = 3)
-# ggsave("plots/transient_comms_noPBcomm1.png", plot = transient_comms)
-
-

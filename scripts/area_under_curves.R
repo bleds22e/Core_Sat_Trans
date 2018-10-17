@@ -66,19 +66,3 @@ abline(v = quantile(NDVI_peak$NDVIpeak, .75), col = 'red')
 abline(v = quantile(NDVI_peak$NDVIpeak, .25), col = 'red')
 
 
-# quantiles
-
-# upper (75%)
-upper <- as.numeric(quantile(NDVI_peak$NDVIpeak, .75))
-lower <- as.numeric(quantile(NDVI_peak$NDVIpeak, .25))
-
-for (i in 1:length(NDVI_peak$NDVIpeak)){
-  NDVI_peak$NDVI_quantiles = NDVI_peak$NDVIpeak
-  if (NDVI_peak$NDVIpeak[i] > upper){
-    NDVI_peak$NDVI_quantiles[i] = i
-  } else if (NDVI_peak$NDVIpeak[i] < lower){
-    NDVI_peak$NDVI_quantiles[i] = i
-  } else {
-    NDVI_peak$NDVI_quantiles[i] = NA
-  }
-}
