@@ -7,6 +7,8 @@ library(RCurl)
 library(tidyverse)
 library(stringr)
 library(zoo)
+library(vegan)
+library(raster)
 
 # FUNCTION #
 
@@ -191,11 +193,7 @@ for (i in 1:length(combined_data$NDVIpeak)){
   }
 }
 
-
-
-
-# first try to get pulse ID
-# then can work from there fairly easily, I think
+# get pulseID
 combined_data$pulseID <- NA
 pulseID = 1
 
@@ -213,16 +211,103 @@ for (i in 1:length(combined_data$date)){
   
 }
 
+# make data frame of rows only with pulses
+combined_pulses <- combined_data[!is.na(combined_data$pulseID),]
 
 # make outline of data frame
-pulses <- data.frame(pulseID = integer(),
-                     pulseMax = numeric(),
-                     pulseDuration = integer(),
-                     pulseSum = numeric(),
-                     transientT1 = numeric(),
-                     tranisentT2 = numeric(),
-                     transientT3 = numeric(),
-                     transientT4 = numeric())
+nrows <- max(combined_pulses$pulseID, na.rm = TRUE)
+pulses <- data.frame(pulseID = integer(nrows),
+                     pulseMax = numeric(nrows),
+                     pulseDuration = integer(nrows),
+                     pulseSum = numeric(nrows),
+                     timeBetween = integer(nrows), # time from end of peak to start of next
+                     transientT0 = numeric(nrows),
+                     transientT1 = numeric(nrows),
+                     transientT2 = numeric(nrows),
+                     transientT3 = numeric(nrows),
+                     transientT4 = numeric(nrows),
+                     transientT5 = numeric(nrows),
+                     transientT6 = numeric(nrows),
+                     transientT7 = numeric(nrows),
+                     transientT8 = numeric(nrows),
+                     transientT9 = numeric(nrows),
+                     transientT10 = numeric(nrows),
+                     transientT11 = numeric(nrows),
+                     transientT12 = numeric(nrows))
+
+pulse_seq <- seq(from = 1, to = nrows)
+pulses$pulseID <- pulse_seq
+
+for (i in pulse_seq){
+  
+  # select only rows from that pulse
+  current_pulse <- combined_pulses[combined_pulses$pulseID == i,]
+  
+  # find the maximum NDVI value
+  pulses$pulseMax[i] <- max(current_pulse$NDVIpeak)
+  
+  # find pulse duration
+  pulses$pulseDuration[i] <- nrow(current_pulse)
+  
+  # find pulse sum
+  pulses$pulseSum[i] <- sum(current_pulse$NDVIpeak)
+  
+  # find time (months) between end of current pulse and start of next pulse
+  pulses$timeBetween[i] <- 12 * (min(combined_pulses[combined_pulses$pulseID == i + 1, "date"]) - max(current_pulse$date))
+  
+  # find the transient rel abundances
+  min_date <- min(current_pulse$date)
+  min_row <- as.integer(rownames(combined_data[combined_data$date == min_date,]))
+  pulses$transientT0[i] <- combined_data[as.character(min_row), "transient_rel_abund"]
+  pulses$transientT1[i] <- combined_data[as.character(min_row + 1), "transient_rel_abund"]
+  pulses$transientT2[i] <- combined_data[as.character(min_row + 2), "transient_rel_abund"]
+  pulses$transientT3[i] <- combined_data[as.character(min_row + 3), "transient_rel_abund"]
+  pulses$transientT4[i] <- combined_data[as.character(min_row + 4), "transient_rel_abund"]
+  pulses$transientT5[i] <- combined_data[as.character(min_row + 5), "transient_rel_abund"]
+  pulses$transientT6[i] <- combined_data[as.character(min_row + 6), "transient_rel_abund"]
+  pulses$transientT7[i] <- combined_data[as.character(min_row + 7), "transient_rel_abund"]
+  pulses$transientT8[i] <- combined_data[as.character(min_row + 8), "transient_rel_abund"]
+  pulses$transientT9[i] <- combined_data[as.character(min_row + 9), "transient_rel_abund"]
+  pulses$transientT10[i] <- combined_data[as.character(min_row + 10), "transient_rel_abund"]
+  pulses$transientT11[i] <- combined_data[as.character(min_row + 11), "transient_rel_abund"]
+  pulses$transientT12[i] <- combined_data[as.character(min_row + 12), "transient_rel_abund"]
+  
+}
+
+pulses$timeBetween[38] <- NA
+
+#========================================================================
+# Run CCA Analysis
+
+# separate into env and response variables
+pulses_NDVI <- pulses[,1:5]
+pulses_transients <- pulses[,6:18]
+
+# histograms of transient distributions
+mapply(hist, as.data.frame(pulses_transients[,1:13], 
+                           main = colnames(pulses_transients[,1:13]),
+                           xlab = "abundance"))
+
+# log transformation
+log.full <- log1p(pulses_transients)
+
+# check row and column sum variability
+rsum <- rowSums(log.full, na.rm = TRUE)
+csum <- colSums(log.full, na.rm = TRUE)
+hist(rsum)
+hist(csum)
+cv(rsum)
+cv(csum)
+
+# standardize the rows because cv > 50
+rTrans <- sweep(log.full, 1, rsum, "/")
+rTrans <- rTrans[-c(34,35),]
+cv(rowSums(rTrans, na.rm = TRUE))
+cv(colSums(rTrans, na.rm = TRUE))
+
+# Determine Response Model (RDA vs CCA)
+decorana(rTrans, na.rm = TRUE)
+
 
 
 #====================================================================
