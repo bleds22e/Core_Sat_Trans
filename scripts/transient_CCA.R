@@ -140,6 +140,7 @@ NDVI1 <- filter(NDVI_peak, date %in% unique(abund_dates1$date))
 NDVI2 <- filter(NDVI_peak, date %in% unique(abund_dates2$date))
 NDVI3 <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
 NDVI_all <- bind_rows(NDVI1, NDVI2, NDVI3)
+NDVI_all$date = as.yearmon(NDVI_all$date)
 
 combined_data <- inner_join(abund_dates, NDVI_all, by = "date")
 combined_data$date = as.yearmon(combined_data$date)
@@ -160,7 +161,23 @@ combined_data <- combined_data[-c(1:30),]
 upper <- as.numeric(quantile(NDVI_peak$NDVIpeak, .75))
 lower <- as.numeric(quantile(NDVI_peak$NDVIpeak, .25))
 
-# are there NDVI values to put in even if there aren't transient values?
+# add in NDVI values even if there aren't transient values
+for (i in 1:length(combined_data$date)){
+  
+  # Is the value NA? If so, save the date as object 'date'
+  if (is.na(combined_data$ndvi[i])){
+    date = combined_data$date[i]
+    
+    # Is it true that the date is in the NDVI_all dataframe?
+    # If so, replace the NAs in the ndvi column and NDVIpeak columns with values
+    # from the NDVI_all dataframe
+    if (length(which(NDVI_all$date == date))>0){
+      combined_data$ndvi[i] <- NDVI_all[NDVI_all$date == date, "ndvi"]
+      combined_data$NDVIpeak[i] <- NDVI_all[NDVI_all$date == date, "NDVIpeak"]
+      
+    }
+  }
+}
 
 combined_data$NDVI_quantiles = NA
 
@@ -180,15 +197,14 @@ for (i in 1:length(combined_data$NDVIpeak)){
 # first try to get pulse ID
 # then can work from there fairly easily, I think
 combined_data$pulseID <- NA
-pulseID = 0
+pulseID = 1
 
 for (i in 1:length(combined_data$date)){
   
-  pulseID = pulseID + 1
-  
   if (!is.na(combined_data$NDVI_quantiles[i])){
-    if(is.na(combinded_data$pulseID[i-1])){
+    if(is.na(combined_data$pulseID[i-1])){
       combined_data$pulseID[i] <- pulseID
+      pulseID = pulseID + 1
     } else{
       combined_data$pulseID[i] <- combined_data$pulseID[i-1]
     }
@@ -196,8 +212,6 @@ for (i in 1:length(combined_data$date)){
   }
   
 }
-
-
 
 
 # make outline of data frame
@@ -208,18 +222,9 @@ pulses <- data.frame(pulseID = integer(),
                      transientT1 = numeric(),
                      tranisentT2 = numeric(),
                      transientT3 = numeric(),
-                     transientT4 = numeric(),
-                     transientT5 = numeric())
+                     transientT4 = numeric())
 
 
 #====================================================================
 # Working Area #
 
-NDVI1$date = as.yearmon(NDVI1$date)
-NDVI2$date = as.yearmon(NDVI2$date)
-NDVI3$date = as.yearmon(NDVI3$date)
-abund_dates1$date = as.yearmon(abund_dates1$date)
-abund_dates2$date = as.yearmon(abund_dates2$date)
-abund_dates3$date = as.yearmon(abund_dates3$date)
-
-NDVI_peak$date = as.yearmon(NDVI_peak$date)
