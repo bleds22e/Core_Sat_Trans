@@ -4,24 +4,24 @@
 
 # LIBRARIES #
 library(RCurl)
-library(tidyverse)
 library(stringr)
 library(zoo)
 library(vegan)
 library(raster)
+library(tidyverse)
 
 # FUNCTION #
 
 find_reg_persist <- function(data){
   # create column for relative regional persistence (periods overall)
-  dat <- select(data, species, period) %>% 
-    group_by(species, period) %>% 
-    summarise(period_count = n())
-  dat1 <- select(dat, species) %>% 
-    group_by(species) %>% 
-    summarise(periods = n())
+  dat <- dplyr::select(data, species, period) %>% 
+    dplyr::group_by(species, period) %>% 
+    dplyr::summarise(period_count = n())
+  dat1 <- dplyr::select(dat, species) %>% 
+    dplyr::group_by(species) %>% 
+    dplyr::summarise(periods = n())
   total_periods <- length(unique(data$period))
-  dat1 <- mutate(dat1, rel_reg_persist = periods/total_periods)
+  dat1 <- dplyr::mutate(dat1, rel_reg_persist = periods/total_periods)
   return(dat1)
 }
 
@@ -34,6 +34,20 @@ NDVI <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/Port
 
 abund <- portalr::abundance(path = "repo", level = "Site", type = "Rodents",
                             plots = "all", unknowns = F, shape = "flat", time = "period")
+
+### ALERT ###
+
+# missing some periods because not all periods were fully trapped
+# also missing some NDVI values because of...reasons
+# makes for *lots* of NA values, making CCA analysis impossible
+# should I:
+#   - for periods where site was only trapped for one night,
+#     double the number of transients caught while trapping?
+#   - for NDVI, take the average of before and after missing value?
+#   - what if there are 2 NDVI missing in a row?
+
+
+
 
 # BREAK UP COMMUNITIES BY LDA
 
@@ -142,9 +156,8 @@ NDVI1 <- filter(NDVI_peak, date %in% unique(abund_dates1$date))
 NDVI2 <- filter(NDVI_peak, date %in% unique(abund_dates2$date))
 NDVI3 <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
 NDVI_all <- bind_rows(NDVI1, NDVI2, NDVI3)
-NDVI_all$date = as.yearmon(NDVI_all$date)
 
-combined_data <- inner_join(abund_dates, NDVI_all, by = "date")
+combined_data <- full_join(abund_dates, NDVI_all, by = "date")
 combined_data$date = as.yearmon(combined_data$date)
 
 # deal with periods that have two different months
@@ -156,7 +169,7 @@ combined_data <- combined_data[!duplicated(combined_data$period),]
 all_dates <- as.data.frame(seq(as.yearmon(min(NDVI_peak$date)), as.yearmon(max(NDVI_peak$date)), by = 1/12))
 colnames(all_dates) = c("date")
 
-combined_data <- full_join(all_dates, combined_data, by = "date")
+combined_data <- full_join(combined_data, all_dates, by = "date")
 combined_data <- combined_data[-c(1:30),]
 
 # quantiles
@@ -305,8 +318,12 @@ rTrans <- rTrans[-c(34,35),]
 cv(rowSums(rTrans, na.rm = TRUE))
 cv(colSums(rTrans, na.rm = TRUE))
 
+# replace NAs with blanks
+rTrans[is.na(rTrans)] <- " "
+rTrans <- as.data.frame(lapply(rTrans, as.numeric))
+
 # Determine Response Model (RDA vs CCA)
-decorana(rTrans, na.rm = TRUE)
+decorana(rTrans)
 
 
 
