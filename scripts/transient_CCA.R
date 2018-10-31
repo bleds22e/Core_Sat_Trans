@@ -382,6 +382,18 @@ decorana(rTrans)
 
 # scale the explanatory variables
 explanatory <- as.data.frame(scale(pulses_NDVI[-c(29,30), -1]))
+cv(colSums(explanatory))
+
+# NOTES FOR RUNNING THE CCA
+#   do the pulse variables need to be transformed? -- maybe log transform 1 and 4?
+#   probably need to z-standardize them anyway (check other labs' code)
+#   check for correlation in the variables (pairwise)
+
+mapply(hist, as.data.frame(explanatory, 
+                           main = colnames(explanatory)))
+
+
+
 
 # run CCA
 
