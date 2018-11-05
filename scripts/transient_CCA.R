@@ -134,7 +134,7 @@ plots_trapped <- trapping %>%
   summarise(count_plots = sum(sampled))
 
 abund_dates <- left_join(abund_dates, plots_trapped, by = "period") 
-abund_dates <- filter(abund_dates, date < 2014)
+abund_dates <- filter(abund_dates, date < 2015)
 
 # if number of plots trapped is between 10 and 17, double the transients
 for (i in 1:nrow(abund_dates)){
@@ -182,6 +182,9 @@ combined_data <- combined_data[!duplicated(combined_data$period),]
 # get all yearmon dates
 all_dates <- as.data.frame(seq(as.yearmon(min(NDVI_peak$date)), as.yearmon(max(NDVI_peak$date)), by = 1/12))
 colnames(all_dates) = c("date")
+additional_year <- as.data.frame(seq(from = max(all_dates$date) + 1/12, by = 1/12, length.out = 12))
+colnames(additional_year) = c("date")
+all_dates <- rbind(all_dates, additional_year)
 
 combined_data <- full_join(combined_data, all_dates, by = "date") %>% 
   arrange(date)
@@ -224,6 +227,7 @@ for (i in 1:nrow(combined_data)){
 
 combined_data$transient_rel_abund[165:166] <- 0
 combined_data$NDVIpeak[165:166] <- (combined_data$NDVIpeak[164] + combined_data$NDVIpeak[167])/2
+
 
 # FIND NDVI PEAKS #
 
@@ -307,7 +311,6 @@ for (i in 1:length(pulse_seq)){
   
   # find the transient rel abundances
   min_date <- min(current_pulse$date)
-  min_row <- as.integer(rownames(combined_data[combined_data$date == min_date,]))
   pulses$transientT0[i] <- combined_data$transient_rel_abund[combined_data$date == min_date]
   pulses$transientT1[i] <- combined_data$transient_rel_abund[combined_data$date == (min_date + 1/12)]
   pulses$transientT2[i] <- combined_data$transient_rel_abund[combined_data$date == (min_date + 2/12)]
@@ -328,16 +331,13 @@ for (i in 1:length(pulse_seq)){
 #========================================================================
 # Run CCA Analysis
 
-# remove row with NAs
-pulses <- pulses[-33,]
-
 # separate into env and response variables
 pulses_NDVI <- pulses[,1:5]
 pulses_transients <- pulses[,6:18]
 
 # remove rows where rowSum is 0
 rsum <- rowSums(pulses_transients)
-pulses_transients <- pulses_transients[-c(29,30),]
+pulses_transients <- pulses_transients[-c(29,30,33),]
 
 # histograms of transient distributions
 mapply(hist, as.data.frame(pulses_transients[,1:13], 
@@ -357,17 +357,15 @@ cv(csum)
 
 # standardize the rows because cv > 50
 rTrans <- sweep(log.full, 1, rsum, "/")
-rTrans <- rTrans[-c(34,35),]
 cv(rowSums(rTrans, na.rm = TRUE))
 cv(colSums(rTrans, na.rm = TRUE))
 
 # Determine Response Model (RDA vs CCA)
 decorana(rTrans)
-  # <3 indicates linear, but damn, that's close to three
-  # gonna start with CCA
+  # need to run RDA instead of CCA (after change to 1/3 rather than 1/2)
 
 # scale the explanatory variables
-explanatory <- as.data.frame(scale(pulses_NDVI[-c(29,30), -1]))
+explanatory <- as.data.frame(scale(pulses_NDVI[-c(29,30,33), -1]))
 cv(colSums(explanatory))
 
 # NOTES FOR RUNNING THE CCA
@@ -380,7 +378,7 @@ mapply(hist, as.data.frame(explanatory,
 
 
 
-
+############### NEED TO SWITCH TO RDA ######################
 # run CCA
 
 ca <- cca(rTrans)
