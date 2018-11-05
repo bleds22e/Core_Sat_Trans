@@ -38,20 +38,6 @@ abund <- portalr::abundance(path = "repo", level = "Site", type = "Rodents",
                             plots = "all", unknowns = F, shape = "flat", 
                             time = "period", min_plots = 10)
 
-### ALERT ###
-
-# missing some periods because not all periods were fully trapped
-# also missing some NDVI values because of...reasons
-# makes for *lots* of NA values, making CCA analysis impossible
-# should I:
-#   - for periods where site was only trapped for one night,
-#     double the number of transients caught while trapping?
-#   - for NDVI, take the average of before and after missing value?
-#   - what if there are 2 NDVI missing in a row?
-
-
-
-
 # BREAK UP COMMUNITIES BY LDA
 
 # pre-2000, 2000-2009, post-2009 - using only 3 because second isn't very clean and don't have NDVI data before 1992
@@ -67,28 +53,28 @@ comm2_persist <- filter(comm2, abundance > 0) %>%
 comm3_persist <- filter(comm3, abundance > 0) %>% 
   find_reg_persist()
 
-# par(mfrow = c(3,1))
-# hist(comm1_persist$rel_reg_persist)
-# hist(comm2_persist$rel_reg_persist)
-# hist(comm3_persist$rel_reg_persist)
+par(mfrow = c(3,1))
+hist(comm1_persist$rel_reg_persist)
+hist(comm2_persist$rel_reg_persist)
+hist(comm3_persist$rel_reg_persist)
 
 #dev.copy(png, "plots/hist_portal_comms.png")
-#dev.off()
+dev.off()
 
 # transients for each community
 
 transients1 <- comm1_persist %>% 
-  filter(rel_reg_persist < 0.5, species != "PB") %>% 
+  filter(rel_reg_persist <= 1/3, species != "PB") %>% 
   select(species)
 transients1 <- unlist(apply(transients1, 1, list), recursive = FALSE)
 
 transients2 <- comm2_persist %>% 
-  filter(rel_reg_persist < 0.5) %>% 
+  filter(rel_reg_persist <= 1/3 ) %>% 
   select(species)
 transients2 <- unlist(apply(transients2, 1, list), recursive = FALSE)
 
 transients3 <- comm3_persist %>% 
-  filter(rel_reg_persist < 0.5) %>% 
+  filter(rel_reg_persist <= 1/3) %>% 
   select(species)
 transients3 <- unlist(apply(transients3, 1, list), recursive = FALSE)
 
