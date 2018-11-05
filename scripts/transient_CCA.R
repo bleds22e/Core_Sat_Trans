@@ -344,39 +344,45 @@ mapply(hist, as.data.frame(pulses_transients[,1:13],
                            main = colnames(pulses_transients[,1:13]),
                            xlab = "abundance"))
 
-# log transformation
+# transformations
 log.full <- log1p(pulses_transients)
+hell.full <- decostand(pulses_transients, "hellinger")
+
 
 # check row and column sum variability
-rsum <- rowSums(log.full, na.rm = TRUE)
-csum <- colSums(log.full, na.rm = TRUE)
+rsum <- rowSums(hell.full, na.rm = TRUE)
+csum <- colSums(hell.full, na.rm = TRUE)
 hist(rsum)
 hist(csum)
 cv(rsum)
 cv(csum)
-
-# standardize the rows because cv > 50
-rTrans <- sweep(log.full, 1, rsum, "/")
-cv(rowSums(rTrans, na.rm = TRUE))
-cv(colSums(rTrans, na.rm = TRUE))
 
 # Determine Response Model (RDA vs CCA)
 decorana(rTrans)
   # need to run RDA instead of CCA (after change to 1/3 rather than 1/2)
 
 # scale the explanatory variables
-explanatory <- as.data.frame(scale(pulses_NDVI[-c(29,30,33), -1]))
-cv(colSums(explanatory))
+vars <- pulses_NDVI[-c(29,30,33), -1]
+vars$timeBetween <- log(vars$timeBetween) 
+cv(colSums(vars))
+vars_z <- scores(vars)
+
+explanatory <- as.data.frame(scale(vars_z))
+mapply(hist, as.data.frame(vars, 
+                           main = colnames(vars)))
+
 
 # NOTES FOR RUNNING THE CCA
 #   do the pulse variables need to be transformed? -- maybe log transform 1 and 4?
 #   probably need to z-standardize them anyway (check other labs' code)
 #   check for correlation in the variables (pairwise)
 
-mapply(hist, as.data.frame(explanatory, 
-                           main = colnames(explanatory)))
+# trying RDA
+trans.rda <- rda(hell.full ~ ., explanatory)
+summary(trans.rda)
 
-
+R2 <- RsquareAdj(trans.rda)$r.squared
+R2adj <- RsquareAdj(trans.rda)$adj.r.squared
 
 ############### NEED TO SWITCH TO RDA ######################
 # run CCA
