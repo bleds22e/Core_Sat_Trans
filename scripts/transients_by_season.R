@@ -7,8 +7,6 @@
 # in the following ways:
 #       - different NDVI file from PortalData repo
 #       - 1988 - 2014
-#       - includes December of 1988 and January/February of 2015
-#         so the seasonal sums/means are more accurate
 #       - has month and year columns in combined_data
 #       - will have seasons added
 
@@ -180,6 +178,8 @@ NDVI2 <- filter(NDVI_peak, date %in% unique(abund_dates2$date))
 NDVI3 <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
 NDVI_all <- bind_rows(NDVI1, NDVI2, NDVI3)
 NDVI_all <- filter(NDVI_all, date < 2015)
+#         maybe include December of 1988 and January/February of 2015
+#         so the seasonal sums/means are more accurate?
 
 ### COMBINE TRANSIENTS AND NDVI ###
 
@@ -262,11 +262,13 @@ for (i in 1:nrow(seasonal_data)){
   }
 }
 
+# summarize by season per year
 seasonal_data <- seasonal_data[-c(1:40),]
 by_season <- seasonal_data %>% 
   group_by(seasonal_year, season) %>% 
   summarise(transients = mean(transient_rel_abund, na.rm = TRUE), ndvi = mean(NDVIpeak, na.rm = TRUE)) 
 
+# make into quarterly data for easier plotting
 by_season$quarter <- NA
 for (i in 1:nrow(by_season)){
   if(by_season$season[i] == 'winter'){
@@ -284,9 +286,17 @@ for (i in 1:nrow(by_season)){
 by_season$quarter <- as.yearqtr(by_season$quarter)
 by_season <- by_season[-92,]
 
+# plot the time series
 ggplot(by_season) +
   geom_point(aes(x = quarter, y = ndvi), color = "dark green") +
   geom_line(aes(x = quarter, y = ndvi), color = "dark green") +
   geom_point(aes(x = quarter, y = transients), color = "salmon") +
   geom_line(aes(x = quarter, y = transients), color = "salmon")
-  
+
+# try running acfs and ccfs
+
+by_season <- arrange(by_season, quarter)
+
+acf(by_season$ndvi)  
+acf(by_season$transients)
+ccf(by_season$transients, by_season$ndvi)
