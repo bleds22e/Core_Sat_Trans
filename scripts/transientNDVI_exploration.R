@@ -29,8 +29,8 @@ find_reg_persist <- function(data){
 
 # GET DATA #
 
-rdat <- read.csv("~bleds22e/Dropbox (UFL)/Git/PortalData/Rodents/Portal_rodent.csv", na.strings = '')
-NDVI <- read.csv("~bleds22e/Dropbox (UFL)/Git/PortalData/NDVI/monthly_NDVI.csv")
+rdat <- read.csv("C:/Users/ellen.bledsoe/Dropbox (UFL)/Git/PortalData/Rodents/Portal_rodent.csv", na.strings = '')
+NDVI <- read.csv("C:/Users/ellen.bledsoe/Dropbox (UFL)/Git/PortalData/NDVI/monthly_NDVI.csv")
 
 #===============================================================
 
@@ -63,17 +63,17 @@ hist(comm3_persist$rel_reg_persist)
 # transients for each community
 
 transients1 <- comm1_persist %>% 
-  filter(rel_reg_persist < 0.5, species != "PB") %>% 
+  filter(rel_reg_persist < 1/3, species != "PB") %>% 
   select(species)
 transients1 <- unlist(apply(transients1, 1, list), recursive = FALSE)
 
 transients2 <- comm2_persist %>% 
-  filter(rel_reg_persist < 0.5) %>% 
+  filter(rel_reg_persist < 1/3) %>% 
   select(species)
 transients2 <- unlist(apply(transients2, 1, list), recursive = FALSE)
 
 transients3 <- comm3_persist %>% 
-  filter(rel_reg_persist < 0.5) %>% 
+  filter(rel_reg_persist < 1/3) %>% 
   select(species)
 transients3 <- unlist(apply(transients3, 1, list), recursive = FALSE)
 
@@ -189,6 +189,7 @@ NDVI3_peak <- filter(NDVI_peak, date %in% unique(abund_dates3$date))
 NDVI3_peak_ts = ts(NDVI3_peak$NDVIpeak, start = c(2010, 1), end = c(2015, 12), frequency = 12)
 
 NDVI_all_peak <- bind_rows(NDVI1_peak, NDVI2_peak, NDVI3_peak)
+NDVI_all_peak$date = as.yearmon(NDVI_all_peak$date)
 
 par(mfrow = c(3,2))
 ccf(NDVI1_peak_ts, comm1_ts)
