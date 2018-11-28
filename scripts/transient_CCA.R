@@ -65,17 +65,17 @@ dev.off()
 
 transients1 <- comm1_persist %>% 
   filter(rel_reg_persist <= 1/3, species != "PB") %>% 
-  select(species)
+  dplyr::select(species)
 transients1 <- unlist(apply(transients1, 1, list), recursive = FALSE)
 
 transients2 <- comm2_persist %>% 
   filter(rel_reg_persist <= 1/3 ) %>% 
-  select(species)
+  dplyr::select(species)
 transients2 <- unlist(apply(transients2, 1, list), recursive = FALSE)
 
 transients3 <- comm3_persist %>% 
   filter(rel_reg_persist <= 1/3) %>% 
-  select(species)
+  dplyr::select(species)
 transients3 <- unlist(apply(transients3, 1, list), recursive = FALSE)
 
 
@@ -115,7 +115,7 @@ for (i in 1:length(rdat$month)){
   }
 }
 
-dates <- select(rdat, year, month, period) %>% 
+dates <- dplyr::select(rdat, year, month, period) %>% 
   tidyr::unite(date, year, month, sep = '-') %>% 
   distinct()
 dates$period <- as.integer(dates$period)
@@ -129,7 +129,7 @@ abund_dates <- bind_rows(abund_dates1, abund_dates2, abund_dates3)
 
 # get data on how many plots were trapped each period
 plots_trapped <- trapping %>% 
-  select(period, plot, sampled) %>% 
+  dplyr::select(period, plot, sampled) %>% 
   group_by(period) %>% 
   summarise(count_plots = sum(sampled))
 
@@ -155,7 +155,7 @@ for (i in 1:nrow(NDVI)){
   }
 }
 
-NDVI <- select(NDVI, year, month, ndvi) %>% 
+NDVI <- dplyr::select(NDVI, year, month, ndvi) %>% 
   tidyr::unite(date, year, month, sep = '-') %>% 
   distinct()
 
@@ -329,7 +329,7 @@ for (i in 1:length(pulse_seq)){
 
 
 #========================================================================
-# Run CCA Analysis
+# Run RDA Analysis
 
 # separate into env and response variables
 pulses_NDVI <- pulses[,1:5]
@@ -340,13 +340,113 @@ rsum <- rowSums(pulses_transients)
 pulses_transients <- pulses_transients[-c(29,30,33),]
 
 # histograms of transient distributions
-mapply(hist, as.data.frame(pulses_transients[,1:13], 
-                           main = colnames(pulses_transients[,1:13]),
+mapply(hist, as.data.frame(pulses_transients, 
+                           main = colnames(pulses_transients),
                            xlab = "abundance"))
 
 # transformations
-log.full <- log1p(pulses_transients)
-hell.full <- decostand(pulses_transients, "hellinger")
+trans.log <- log1p(pulses_transients)
+mapply(hist, as.data.frame(trans.log, 
+                           main = colnames(pulses_transients),
+                           xlab = "abundance"))
+
+trans.hellinger <- decostand(pulses_transients, "hellinger")
+mapply(hist, as.data.frame(trans.hellinger, 
+                           main = colnames(pulses_transients),
+                           xlab = "abundance"))
+
+# check row and column sum variability
+rsum <- rowSums(hell.full, na.rm = TRUE)
+csum <- colSums(hell.full, na.rm = TRUE)
+hist(rsum)
+hist(csum)
+cv(rsum)
+cv(csum)
+
+# Determine Response Model (RDA vs CCA)
+decorana(trans.hellinger)
+
+# scale the explanatory variables (measured on different scales)
+vars <- pulses_NDVI[-c(29,30,32,33), -1]
+vars$timeBetween <- log(vars$timeBetween) 
+
+cv(colSums(vars))
+csum <- colSums(vars, na.rm = TRUE)
+vars <- sweep(vars, 2, csum, "/")
+cv(colSums(vars))
+cv(rowSums(vars))
+vars_z <- scores(vars)
+
+explanatory <- as.data.frame(scale(vars_z))
+mapply(hist, as.data.frame(vars, 
+                           main = colnames(vars)))
+
+# check correlation between explantory variables
+PerformanceAnalytics::chart.Correlation(explanatory)
+
+# trying RDA
+trans.rda <- rda(trans.hellinger ~ ., explanatory)
+summary(trans.rda)
+
+RsquareAdj(trans.rda)$r.squared
+RsquareAdj(trans.rda)$adj.r.squared
+
+# plot results using F scores
+plot(trans.rda, scaling = 1, main = "Triplot RDA trans.rda ~ explanatory - scaling 1 - wa scores")
+trans.sc <- scores(trans.rda, choices = 1:2, scaling = 1, display = "sp")
+arrows(0, 0, trans.sc[,1], trans.sc[,2], length = 0, lty = 1, col = "red")
+
+# plot results using Z scores
+plot(trans.rda, scaling = 1, display = c("sp", "lc", "cn"),
+     main = "Triplot RDA trans.rda ~ explanatory - scaling 1 - lc scores")
+arrows(0, 0, trans.sc[,1], trans.sc[,2], length = 0, lty = 1, col = "red")
+
+# permutation test using anova to test sig of model and axes
+
+# global test of RDA results
+anova(trans.rda, step = 1000)
+# test of canonical axes
+anova(trans.rda, by = "axis", step = 1000)
+
+# variable selection
+step.forward <- ordiR2step(rda(trans.hellinger ~ 1, data = explanatory),
+                           scope = formula(trans.rda), R2scope = F, 
+                           direction = "forward", step = 1000)
+
+# partial RDA
+partial.duration <- rda(hell.full ~ pulseDuration + Condition(pulseSum + pulseMax + timeBetween) , data = explanatory)
+summary(partial.duration)
+anova(partial.duration, step = 1000)
+
+partial.sum <- rda(hell.full ~ pulseSum + Condition(pulseDuration + pulseMax + timeBetween) , data = explanatory)
+summary(partial.sum)
+anova(partial.sum, step = 1000)
+
+partial.max <- rda(hell.full ~ pulseMax + Condition(pulseSum + pulseDuration + timeBetween) , data = explanatory)
+summary(partial.max)
+anova(partial.max, step = 1000)
+
+#====================================================================
+# Working Area #
+
+# run CCA (if you remove T11 and T12)
+
+
+# separate into env and response variables
+pulses_NDVI <- pulses[,1:5]
+pulses_transients <- pulses[,6:16]
+
+# remove rows where rowSum is 0
+rsum <- rowSums(pulses_transients)
+pulses_transients <- pulses_transients[-c(29,30,32,33),]
+
+# histograms of transient distributions
+mapply(hist, as.data.frame(pulses_transients, 
+                           main = colnames(pulses_transients),
+                           xlab = "abundance"))
+
+# transformations
+trans.hellinger <- decostand(pulses_transients, "hellinger")
 
 
 # check row and column sum variability
@@ -358,40 +458,32 @@ cv(rsum)
 cv(csum)
 
 # Determine Response Model (RDA vs CCA)
-decorana(rTrans)
-  # need to run RDA instead of CCA (after change to 1/3 rather than 1/2)
+decorana(trans.hellinger)
 
-# scale the explanatory variables
-vars <- pulses_NDVI[-c(29,30,33), -1]
+# scale the explanatory variables (measured on different scales)
+vars <- pulses_NDVI[-c(29,30,32,33), -1]
 vars$timeBetween <- log(vars$timeBetween) 
+
 cv(colSums(vars))
+csum <- colSums(vars, na.rm = TRUE)
+vars <- sweep(vars, 2, csum, "/")
+cv(colSums(vars))
+cv(rowSums(vars))
 vars_z <- scores(vars)
 
 explanatory <- as.data.frame(scale(vars_z))
 mapply(hist, as.data.frame(vars, 
                            main = colnames(vars)))
 
+# check correlation between explantory variables
+PerformanceAnalytics::chart.Correlation(explanatory)
 
-# NOTES FOR RUNNING THE CCA
-#   do the pulse variables need to be transformed? -- maybe log transform 1 and 4?
-#   probably need to z-standardize them anyway (check other labs' code)
-#   check for correlation in the variables (pairwise)
-
-# trying RDA
-trans.rda <- rda(hell.full ~ ., explanatory)
-summary(trans.rda)
-
-R2 <- RsquareAdj(trans.rda)$r.squared
-R2adj <- RsquareAdj(trans.rda)$adj.r.squared
-
-############### NEED TO SWITCH TO RDA ######################
 # run CCA
-
-ca <- cca(rTrans)
+ca <- cca(trans.hellinger)
 plot(ca)
 summary(ca)
 
-transient.CCA <- cca(rTrans ~ ., data = explanatory)
+transient.CCA <- cca(trans.hellinger ~ ., data = explanatory)
 summary(transient.CCA)
 
 anova.cca(transient.CCA)
@@ -410,6 +502,31 @@ transient.CCA$CCA$biplot
 plot(transient.CCA, choices=c(1,2), display = c('wa','sp','bp'), scaling = 2)
 plot(transient.CCA, choices=c(1,2), display = c('lc','sp','bp'), scaling = 2)
 
-#====================================================================
-# Working Area #
 
+
+##################################################################
+# WORKING AREA -- Cross-correlation functions
+
+# with data above
+acf(combined_data$NDVIpeak[-c(351:364)])
+lag.plot(combined_data$NDVIpeak[-c(351:364)])
+
+acf(combined_data$transient_rel_abund)
+pacf(combined_data$transient_rel_abund)
+
+ccf(combined_data$NDVIpeak[-c(351:364)], combined_data$transient_rel_abund[-c(351:364)])
+ccf(combined_data$transient_rel_abund[-c(351:364)], combined_data$NDVIpeak[-c(351:364)])
+
+ndvi_ts <- ts(combined_data$NDVIpeak[-c(351:364)], frequency = 12, start = c(1986, 11))
+trans_ts <- ts(combined_data$transient_rel_abund[-c(351:364)], frequency = 12, start = c(1986, 11))
+
+stl(ndvi_ts, s.window = "periodic")
+plot(stl(ndvi_ts, s.window = "periodic"))
+plot(stl(trans_ts, s.window = "periodic"))
+
+pacf(ndvi_ts)
+pacf(trans_ts)
+
+trans_prewhiten <- psd::prewhiten(trans_ts)
+
+TSA::prewhiten(trans_ts, ndvi_ts)
