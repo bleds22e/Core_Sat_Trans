@@ -217,5 +217,73 @@ for (i in 1:nrow(combined_data)){
 }
 
 
-# 
+# MAKE NEW DATAFRAME FOR HEATMAP #
 
+# make outline of data frame
+nrows <- length(combined_data$date)
+lags <- data.frame(NDVI = combined_data$NDVIpeak,
+                   d.NDVI = numeric(nrows),
+                   transientT0 = numeric(nrows),
+                   transientT1 = numeric(nrows),
+                   transientT2 = numeric(nrows),
+                   transientT3 = numeric(nrows),
+                   transientT4 = numeric(nrows),
+                   transientT5 = numeric(nrows),
+                   transientT6 = numeric(nrows),
+                   transientT7 = numeric(nrows),
+                   transientT8 = numeric(nrows),
+                   transientT9 = numeric(nrows),
+                   transientT10 = numeric(nrows),
+                   transientT11 = numeric(nrows),
+                   transientT12 = numeric(nrows))
+
+for (i in 2:length(combined_data$date)){
+  
+  # find change in NDVI
+  lags$d.NDVI[i] <- lags$NDVI[i] - lags$NDVI[i-1]
+  
+  # find the transient rel abundances
+  lags$transientT0[i] <- combined_data$transient_rel_abund[i]
+  lags$transientT1[i] <- combined_data$transient_rel_abund[i + 1]
+  lags$transientT2[i] <- combined_data$transient_rel_abund[i + 2]
+  lags$transientT3[i] <- combined_data$transient_rel_abund[i + 3]
+  lags$transientT4[i] <- combined_data$transient_rel_abund[i + 4]
+  lags$transientT5[i] <- combined_data$transient_rel_abund[i + 5]
+  lags$transientT6[i] <- combined_data$transient_rel_abund[i + 6]
+  lags$transientT7[i] <- combined_data$transient_rel_abund[i + 7]
+  lags$transientT8[i] <- combined_data$transient_rel_abund[i + 8]
+  lags$transientT9[i] <- combined_data$transient_rel_abund[i + 9]
+  lags$transientT10[i] <- combined_data$transient_rel_abund[i + 10]
+  lags$transientT11[i] <- combined_data$transient_rel_abund[i + 11]
+  lags$transientT12[i] <- combined_data$transient_rel_abund[i + 12]
+  
+}
+
+# plot heat maps
+
+lags$NDVI_bin <- findInterval(lags$NDVI, seq(-0.1, 0.35, by = 0.025))
+lags$d.NDVI_bin <- findInterval(lags$NDVI, seq(-0.15, 0.375, by = 0.025))
+
+plot_list <- list()
+columns <- seq(3, 14)
+
+##### I think fill = df[,3] is the problem
+
+for(i in columns) {
+
+  df <- lags[,c(16,17,i)] %>% na.omit()
+  
+  (plot <- ggplot(data = df, aes(x = NDVI_bin, y = d.NDVI_bin)) + 
+          geom_tile(aes(fill = df[,3])) + 
+          scale_fill_viridis_c(limits = c(0, 0.35)) +
+          theme_bw()) 
+          
+  legend <- cowplot::get_legend(plot)
+
+  plot <- plot + theme(legend.position = "none")
+  p = i-2
+  plot_list[[p]] <- plot
+
+}
+
+cowplot::plot_grid(plotlist = plot_list, nrow = 3, ncol = 4)
