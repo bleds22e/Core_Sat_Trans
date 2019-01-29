@@ -316,8 +316,8 @@ for (i in 2:nrow(combined_data)){
   
 }
 
-combined_data$transient_rel_abund[138:139] <- 0
-combined_data$NDVIpeak[138:139] <- (combined_data$NDVIpeak[137] + combined_data$NDVIpeak[140])/2
+combined_data$transient_rel_abund[212:213] <- 0
+combined_data$NDVIpeak[212:213] <- (combined_data$NDVIpeak[211] + combined_data$NDVIpeak[214])/2
 
 # ADD SEASONS #
 
