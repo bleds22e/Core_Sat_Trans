@@ -221,8 +221,79 @@ for (i in 1:nrow(combined_data)){
   }
 }
 
+# WITHOUT INTERPOLATION # 
 
-# INTERPOLATE MISSING VALUES #
+# fill in any missing months and years
+for (i in 2:nrow(combined_data)){
+  
+  # fill in missing month and year values
+  if (is.na(combined_data$month[i])){
+    combined_data$year[i] <- year(combined_data$date[i])
+    combined_data$month[i] <- month(combined_data$date[i])
+  }
+}
+
+# combined_data$year[138:139] <- 1999
+# combined_data$month[138] <- 7
+# combined_data$month[139] <- 8
+
+
+# ADD SEASONS #
+
+seasonal_data <- portalr::add_seasons(combined_data, season_level = 4)
+
+# add seasonal year column for summary
+seasonal_data$seasonal_year <- NA
+for (i in 1:nrow(seasonal_data)){
+  if(month(seasonal_data$date[i]) == 12){
+    seasonal_data$seasonal_year[i] <- (year(seasonal_data$date[i]) + 1)
+  } else {
+    seasonal_data$seasonal_year[i] <- year(seasonal_data$date[i])
+  }
+}
+
+# summarize by season per year
+# seasonal_data <- seasonal_data[-c(1:40),]
+by_season <- seasonal_data %>% 
+  group_by(seasonal_year, season) %>% 
+  summarise(transients = mean(transient_rel_abund, na.rm = TRUE), ndvi = mean(NDVIpeak, na.rm = TRUE)) 
+by_season <- by_season[-c(1:5),]
+
+# make into quarterly data for easier plotting
+by_season$quarter <- NA
+for (i in 1:nrow(by_season)){
+  if(by_season$season[i] == 'winter'){
+    by_season$quarter[i] = paste0(by_season$seasonal_year[i], "-", 1)
+  } else if (by_season$season[i] == 'spring'){
+    by_season$quarter[i] = paste0(by_season$seasonal_year[i], "-", 2)
+  } else if (by_season$season[i] == 'summer'){
+    by_season$quarter[i] = paste0(by_season$seasonal_year[i], "-", 3)
+  } else {
+    by_season$quarter[i] = paste0(by_season$seasonal_year[i], "-", 4)
+  }  
+  
+}
+
+by_season$quarter <- as.yearqtr(by_season$quarter)
+
+# plot the time series
+ggplot(by_season) +
+  geom_point(aes(x = quarter, y = ndvi), color = "dark green") +
+  geom_line(aes(x = quarter, y = ndvi), color = "dark green") +
+  geom_point(aes(x = quarter, y = transients), color = "salmon") +
+  geom_line(aes(x = quarter, y = transients), color = "salmon")
+
+# run correlation functions
+
+by_season_NAomit <- arrange(by_season, quarter) %>% 
+  na.omit()
+
+acf(by_season_NAomit$ndvi)  
+acf(by_season_NAomit$transients)
+ccf(by_season_NAomit$transients, by_season$ndvi)
+
+
+# WITH INTERPOLATION #
 
 for (i in 2:nrow(combined_data)){
   
