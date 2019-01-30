@@ -281,6 +281,7 @@ ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) +
   scale_fill_viridis_c(limits = c(0, 0.35)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
+ggsave("plots/heatmap_points.png")
 
 ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
   stat_summary_2d() +
@@ -289,6 +290,7 @@ ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) +
   scale_fill_viridis_c(limits = c(0, 0.35)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
+ggsave("plots/heatmap_summary.png")
 
 ggplot(data = lags_long, aes(x = NDVI_bin, y = d.NDVI_bin)) + 
   geom_tile(aes(fill = transients)) + 
@@ -297,3 +299,13 @@ ggplot(data = lags_long, aes(x = NDVI_bin, y = d.NDVI_bin)) +
   scale_fill_viridis_c(limits = c(0, 0.35)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
+ggsave("plots/heatmap_geom_tile.png")
+
+ggplot(data = lags_long, aes(x = round(NDVI,1), y = round(d.NDVI, 1))) + 
+  geom_tile(aes(fill = round(transients, 1))) + 
+  geom_vline(xintercept = 0, col = "gray") +
+  geom_hline(yintercept = 0, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.35)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+ggsave("plots/heatmap_1digit.png")
