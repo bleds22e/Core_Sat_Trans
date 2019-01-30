@@ -262,28 +262,38 @@ for (i in 2:length(combined_data$date)){
 # plot heat maps
 
 lags$NDVI_bin <- findInterval(lags$NDVI, seq(-0.1, 0.35, by = 0.025))
-lags$d.NDVI_bin <- findInterval(lags$NDVI, seq(-0.15, 0.375, by = 0.025))
+lags$d.NDVI_bin <- findInterval(lags$d.NDVI, seq(-0.15, 0.375, by = 0.025))
 
-plot_list <- list()
-columns <- seq(3, 14)
+lags_long <- tidyr::gather(lags, "time_lag", "transients", 3:15)
+lags_long <- lags_long[lags_long$time_lag != "transientT12",]
 
-##### I think fill = df[,3] is the problem
+new_levels = c("transientT0", "transientT1", "transientT2",
+               "transientT3", "transientT4", "transientT5",
+               "transientT6", "transientT7", "transientT8",
+               "transientT9", "transientT10", "transientT11")
+lags_long <- arrange(mutate(lags_long, time_lag = factor(time_lag, levels = new_levels)), time_lag)
 
-for(i in columns) {
+ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
+  stat_summary_2d() +
+  geom_point(shape = 1, col = "white") + 
+  geom_vline(xintercept = 0, col = "gray") +
+  geom_hline(yintercept = 0, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.35)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
 
-  df <- lags[,c(16,17,i)] %>% na.omit()
-  
-  (plot <- ggplot(data = df, aes(x = NDVI_bin, y = d.NDVI_bin)) + 
-          geom_tile(aes(fill = df[,3])) + 
-          scale_fill_viridis_c(limits = c(0, 0.35)) +
-          theme_bw()) 
-          
-  legend <- cowplot::get_legend(plot)
+ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
+  stat_summary_2d() +
+  geom_vline(xintercept = 0, col = "gray") +
+  geom_hline(yintercept = 0, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.35)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
 
-  plot <- plot + theme(legend.position = "none")
-  p = i-2
-  plot_list[[p]] <- plot
-
-}
-
-cowplot::plot_grid(plotlist = plot_list, nrow = 3, ncol = 4)
+ggplot(data = lags_long, aes(x = NDVI_bin, y = d.NDVI_bin)) + 
+  geom_tile(aes(fill = transients)) + 
+  geom_vline(xintercept = 4.5, col = "gray") +
+  geom_hline(yintercept = 6.5, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.35)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
