@@ -112,29 +112,69 @@ rel_abund_data <- full_join(trapping_data, rel_abund_trans)
 # double the number of transients if approriate
 for (i in 1:nrow(rel_abund_data)){
   if (rel_abund_data$nplots[i] <= 17){
-    rel_abund_data$transient_rel_abund[i] <- rel_abund_data$transient_rel_abund[i]*2
+    rel_abund_data$trans_rel_abund[i] <- rel_abund_data$trans_rel_abund[i]*2
   }
 }
+
+### nudge some periods around then select second period w/ same date
+
+rel_abund_data <- rel_abund_data %>% 
+  arrange(year, month)
+
+# select certain months of periods with 2 months
+rel_abund_data[83, 1] <- 6
+rel_abund_data[112:113, 3:7] <- rel_abund_data[113:114, 3:7]
+rel_abund_data[143, 1] <- 8
+rel_abund_data[178, 1] <- 6
+rel_abund_data[197, 1] <- 1
+rel_abund_data[214, 1] <- 5
+rel_abund_data[220, 1] <- 11
+rel_abund_data[240, 1] <- 8
+rel_abund_data[247, 1] <- 2
+rel_abund_data[249, 1] <- 4
+rel_abund_data[272, 1] <- 5
+rel_abund_data[273, 1] <- 6
+rel_abund_data[281, 1] <- 2
+rel_abund_data[303, 1:2] <- c(1, 2003)
+rel_abund_data[307, 1] <- 4
+rel_abund_data[342, 1] <- 2
+rel_abund_data[403, 1] <- 6
+rel_abund_data[408, 1] <- 11
+
+rel_abund_data <- rel_abund_data[-c(48, 52, 56, 85, 114, 118, 148, 179, 212, 
+                                    246, 276, 305, 336, 340, 370, 405),]
 
 #=========================================================
 # COMBINE NDVI AND TRANSIENT DATA
 
-# put months in order
-NDVI <- NDVI %>% arrange(year, month)
-
-# add transient relative abundance and yearmon object
+# add transient relative abundance
 NDVI_transient <- full_join(rel_abund_data, NDVI)
-NDVI_transient$date <- as.yearmon(paste(NDVI_transient$year, NDVI_transient$month), "%Y %m")  
 
-################### need to deal with multiple months per period 
-                  # and multiple periods per month
-                  # would using new_moons as the x-axis fix this issue?
+# put months in order
+NDVI_transient <- NDVI_transient %>% arrange(year, month)
+
+# make sure there's a row for every yearmon combo
+months <- seq(from = as.Date("1987-07-01"), to = as.Date("2013-12-01"), by = "month")
+values <- 1:length(months)
+series <- zooreg(values, as.yearmon("1987-07"), freq = 12)
+
+# fill in transient numbers that can easily be interpolated
+for (i in 2:nrow(NDVI_transient)){
+  # fill in missing transient values
+  if (is.na(NDVI_transient$trans_rel_abund[i])){
+    NDVI_transient$trans_rel_abund[i] <- (NDVI_transient$trans_rel_abund[i-1] + NDVI_transient$trans_rel_abund[i+1])/2
+  }
+}
+
+
+
+
+
 
 #==========================================================
 # MAKE NEW DATAFRAME FOR HEATMAP #
 
-# get median value of NDVI
-NDVI_transient <- mutate(NDVI_transient, NDVI_median_center = ndvi - median(ndvi, na.rm = TRUE))
+NDVI_transient$date <- as.yearmon(paste(NDVI_transient$year, NDVI_transient$month), "%Y %m") 
 
 # make outline of data frame
 nrows <- length(NDVI_transient$date)
