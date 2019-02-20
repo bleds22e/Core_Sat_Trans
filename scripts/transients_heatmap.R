@@ -234,8 +234,7 @@ lags <- data.frame(NDVI = combined_data$NDVIpeak,
                    transientT8 = numeric(nrows),
                    transientT9 = numeric(nrows),
                    transientT10 = numeric(nrows),
-                   transientT11 = numeric(nrows),
-                   transientT12 = numeric(nrows))
+                   transientT11 = numeric(nrows))
 
 for (i in 2:length(combined_data$date)){
   
@@ -255,17 +254,57 @@ for (i in 2:length(combined_data$date)){
   lags$transientT9[i] <- combined_data$transient_rel_abund[i + 9]
   lags$transientT10[i] <- combined_data$transient_rel_abund[i + 10]
   lags$transientT11[i] <- combined_data$transient_rel_abund[i + 11]
-  lags$transientT12[i] <- combined_data$transient_rel_abund[i + 12]
   
 }
 
 # plot heat maps
 
-lags$NDVI_bin <- findInterval(lags$NDVI, seq(-0.1, 0.35, by = 0.025))
-lags$d.NDVI_bin <- findInterval(lags$d.NDVI, seq(-0.15, 0.375, by = 0.025))
+######
+# try transforming by ways suggested in stack overflow
+# and by centering around column (or maybe row) mean?
+# also `rcompanion` transformTukey()
+# bestNormalize
 
-lags_long <- tidyr::gather(lags, "time_lag", "transients", 3:15)
-lags_long <- lags_long[lags_long$time_lag != "transientT12",]
+bN_NDVI <- bestNormalize(lags$NDVI)
+bN_NDVI
+oN_NDVI <- orderNorm(lags$NDVI)
+par(mfrow = c(1,2))
+hist(lags$NDVI)
+hist(oN_NDVI$x.t)
+
+bN_d.NDVI <- bestNormalize(lags$d.NDVI)
+bN_d.NDVI
+par(mfrow = c(1,2))
+hist(lags$d.NDVI)
+hist(bN_d.NDVI$x.t)
+
+bN_transient <- bestNormalize(lags$transientT0)
+bN_transient
+oN_transient <- orderNorm(lags$transientT0)
+par(mfrow = c(1,3))
+hist(lags$transientT0)
+hist(bN_transient$x.t)
+hist(oN_transient$x.t)
+
+
+# lags$NDVI_bin <- findInterval(lags$NDVI, seq(-0.1, 0.35, by = 0.025))
+# lags$d.NDVI_bin <- findInterval(lags$d.NDVI, seq(-0.15, 0.375, by = 0.025))
+
+lags_oN <- lags
+for (i in 1:length(lags)) {
+  i = i
+  orderNorm_obj <- orderNorm(lags_oN[,i])
+  lags_oN[,i] <- orderNorm_obj$x.t
+}
+
+par(mfrow = c(4,4))
+for (i in 1:length(lags_oN)){
+  i = i
+  hist(lags_oN[,i])
+}
+
+# with no tranformation
+lags_long <- tidyr::gather(lags, "time_lag", "transients", 3:14)
 
 new_levels = c("transientT0", "transientT1", "transientT2",
                "transientT3", "transientT4", "transientT5",
@@ -309,3 +348,55 @@ ggplot(data = lags_long, aes(x = round(NDVI,1), y = round(d.NDVI, 1))) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
 ggsave("plots/heatmap_1digit.png")
+
+
+### with orderNorm tranformations
+
+lags_oN$NDVI_bin <- findInterval(lags_oN$NDVI, seq(-3, 3, by = 0.5))
+lags_oN$d.NDVI_bin <- findInterval(lags_oN$d.NDVI, seq(-3, 3, by = 0.5))
+
+
+lags_long <- tidyr::gather(lags_oN, "time_lag", "transients", 3:14)
+
+new_levels = c("transientT0", "transientT1", "transientT2",
+               "transientT3", "transientT4", "transientT5",
+               "transientT6", "transientT7", "transientT8",
+               "transientT9", "transientT10", "transientT11")
+lags_long <- arrange(mutate(lags_long, time_lag = factor(time_lag, levels = new_levels)), time_lag)
+
+ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
+  stat_summary_2d() +
+  geom_point(shape = 1, col = "white") + 
+  geom_vline(xintercept = 0, col = "gray") +
+  geom_hline(yintercept = .26, col = "gray") +
+  scale_fill_viridis_c() +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+#ggsave("plots/heatmap_points_oN.png")
+
+ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
+  geom_vline(xintercept = 0, col = "gray") +
+  geom_hline(yintercept = 0.26, col = "gray") +
+  stat_summary_2d() +
+  scale_fill_viridis_c() +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+ggsave("plots/heatmap_summary_oN.png")
+
+ggplot(data = lags_long, aes(x = NDVI_bin, y = d.NDVI_bin)) + 
+  geom_tile(aes(fill = transients)) + 
+  geom_vline(xintercept = 6.5, col = "gray") +
+  geom_hline(yintercept = 6.5, col = "gray") +
+  scale_fill_viridis_c() +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+ggsave("plots/heatmap_geom_tile_oN.png")
+
+ggplot(data = lags_long, aes(x = round(NDVI,0), y = round(d.NDVI, 0))) + 
+  geom_tile(aes(fill = round(transients, 1))) + 
+  geom_vline(xintercept = 0, col = "gray") +
+  geom_hline(yintercept = 0.26, col = "gray") +
+  scale_fill_viridis_c() +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+#ggsave("plots/heatmap_1digit_oN.png")
