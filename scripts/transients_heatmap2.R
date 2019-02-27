@@ -300,6 +300,8 @@ ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, gro
   xlab("Lag Time") +
   ylab("Mean Transients (above 0.025)") +
   theme(axis.text.x = element_text(angle = -45, hjust = -.1))
+ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants.png")
+
 
 ### 3D plots ###
 library(spatstat)
@@ -319,3 +321,5 @@ plot <- plot_ly(lags, x = ~NDVI, y = ~d.NDVI, z = ~transientT6) %>%
                       yaxis = list(title = "d.NDVI"),
                       zaxis = list(title = "transients")))
 
+plot_ly(x = lags$NDVI, y = lags$d.NDVI, z = lags$transientT5,
+        type = 'scatter3d', mode = "markers", color = lags$transientT5)
