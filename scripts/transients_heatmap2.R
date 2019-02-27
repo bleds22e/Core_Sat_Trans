@@ -150,26 +150,35 @@ rel_abund_data <- rel_abund_data[-c(48, 52, 56, 85, 114, 118, 148, 179, 212,
 # add transient relative abundance
 NDVI_transient <- full_join(rel_abund_data, NDVI)
 
+# make sure there's a row for every yearmon combo
+all_dates <- expand.grid(month = seq(1:12), year = 1978:2018)
+NDVI_transient <- full_join(NDVI_transient, all_dates, by = c("month" = "month", "year" = "year"))
+
 # put months in order
 NDVI_transient <- NDVI_transient %>% arrange(year, month)
 
-# make sure there's a row for every yearmon combo
-months <- seq(from = as.Date("1987-07-01"), to = as.Date("2013-12-01"), by = "month")
-values <- 1:length(months)
-series <- zooreg(values, as.yearmon("1987-07"), freq = 12)
-
-# fill in transient numbers that can easily be interpolated
+# fill in easily interpolated missing values
 for (i in 2:nrow(NDVI_transient)){
+  
   # fill in missing transient values
   if (is.na(NDVI_transient$trans_rel_abund[i])){
     NDVI_transient$trans_rel_abund[i] <- (NDVI_transient$trans_rel_abund[i-1] + NDVI_transient$trans_rel_abund[i+1])/2
   }
+  
+  # fill in missing NDVI values
+  if (is.na(NDVI_transient$ndvi[i])){
+    if(!is.na(NDVI_transient$ndvi[i-1]))
+      NDVI_transient$ndvi[i] <- (NDVI_transient$ndvi[i-1] + NDVI_transient$ndvi[i+1])/2
+  } 
+  
 }
 
+# make code for this later
+trans_value <- (NDVI_transient$trans_rel_abund[107] - NDVI_transient$trans_rel_abund[104])/3
+NDVI_transient$trans_rel_abund[105] <- NDVI_transient$trans_rel_abund[104] + trans_value
+NDVI_transient$trans_rel_abund[106] <- NDVI_transient$trans_rel_abund[104] + (2*trans_value)
 
-
-
-
+NDVI_transient$trans_rel_abund[267:268] <- 0
 
 #==========================================================
 # MAKE NEW DATAFRAME FOR HEATMAP #
@@ -178,7 +187,7 @@ NDVI_transient$date <- as.yearmon(paste(NDVI_transient$year, NDVI_transient$mont
 
 # make outline of data frame
 nrows <- length(NDVI_transient$date)
-lags <- data.frame(NDVI = NDVI_transient$NDVI_median_center,
+lags <- data.frame(NDVI = NDVI_transient$ndvi,
                    d.NDVI = numeric(nrows),
                    transientT0 = numeric(nrows),
                    transientT1 = numeric(nrows),
@@ -193,23 +202,120 @@ lags <- data.frame(NDVI = NDVI_transient$NDVI_median_center,
                    transientT10 = numeric(nrows),
                    transientT11 = numeric(nrows))
 
-for (i in 2:length(combined_data$date)){
+for (i in 2:length(NDVI_transient$date)){
   
   # find change in NDVI
   lags$d.NDVI[i] <- lags$NDVI[i] - lags$NDVI[i-1]
   
   # find the transient rel abundances
-  lags$transientT0[i] <- combined_data$transient_rel_abund[i]
-  lags$transientT1[i] <- combined_data$transient_rel_abund[i + 1]
-  lags$transientT2[i] <- combined_data$transient_rel_abund[i + 2]
-  lags$transientT3[i] <- combined_data$transient_rel_abund[i + 3]
-  lags$transientT4[i] <- combined_data$transient_rel_abund[i + 4]
-  lags$transientT5[i] <- combined_data$transient_rel_abund[i + 5]
-  lags$transientT6[i] <- combined_data$transient_rel_abund[i + 6]
-  lags$transientT7[i] <- combined_data$transient_rel_abund[i + 7]
-  lags$transientT8[i] <- combined_data$transient_rel_abund[i + 8]
-  lags$transientT9[i] <- combined_data$transient_rel_abund[i + 9]
-  lags$transientT10[i] <- combined_data$transient_rel_abund[i + 10]
-  lags$transientT11[i] <- combined_data$transient_rel_abund[i + 11]
+  lags$transientT0[i] <- NDVI_transient$trans_rel_abund[i]
+  lags$transientT1[i] <- NDVI_transient$trans_rel_abund[i + 1]
+  lags$transientT2[i] <- NDVI_transient$trans_rel_abund[i + 2]
+  lags$transientT3[i] <- NDVI_transient$trans_rel_abund[i + 3]
+  lags$transientT4[i] <- NDVI_transient$trans_rel_abund[i + 4]
+  lags$transientT5[i] <- NDVI_transient$trans_rel_abund[i + 5]
+  lags$transientT6[i] <- NDVI_transient$trans_rel_abund[i + 6]
+  lags$transientT7[i] <- NDVI_transient$trans_rel_abund[i + 7]
+  lags$transientT8[i] <- NDVI_transient$trans_rel_abund[i + 8]
+  lags$transientT9[i] <- NDVI_transient$trans_rel_abund[i + 9]
+  lags$transientT10[i] <- NDVI_transient$trans_rel_abund[i + 10]
+  lags$transientT11[i] <- NDVI_transient$trans_rel_abund[i + 11]
   
 }
+
+lags <- lags[complete.cases(lags),]
+
+#=================================================================
+# PLOTTING #
+
+median_ndvi <- median(NDVI_transient$ndvi, na.rm = TRUE)
+
+### Heatmap style plotting ###
+
+# rearrange data for easier plotting
+lags_long <- tidyr::gather(lags, "time_lag", "transients", 3:14)
+
+new_levels = c("transientT0", "transientT1", "transientT2",
+               "transientT3", "transientT4", "transientT5",
+               "transientT6", "transientT7", "transientT8",
+               "transientT9", "transientT10", "transientT11")
+lags_long <- arrange(mutate(lags_long, time_lag = factor(time_lag, levels = new_levels)), time_lag)
+
+# various heatmap plots
+ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
+  stat_summary_2d() +
+  geom_point(shape = 1, col = "white") + 
+  geom_vline(xintercept = median_ndvi, col = "gray") +
+  geom_hline(yintercept = 0, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.18)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+ggsave("plots/GIMMs_plots/heatmap_points.png")
+
+ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
+  stat_summary_2d() +
+  geom_vline(xintercept = median_ndvi, col = "gray") +
+  geom_hline(yintercept = 0, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.18)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+ggsave("plots/GIMMs_plots/heatmap_summary.png")
+
+ggplot(data = lags_long, aes(x = round(NDVI,2), y = round(d.NDVI, 2))) + 
+  geom_tile(aes(fill = round(transients, 2))) + 
+  geom_vline(xintercept = median_ndvi, col = "gray") +
+  geom_hline(yintercept = 0, col = "gray") +
+  scale_fill_viridis_c(limits = c(0, 0.18)) +
+  facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
+  theme_bw()
+ggsave("plots/GIMMs_plots/heatmap_2digit.png")
+
+### Get "contingency" tables ###
+
+# get quadrants
+x.neg_y.pos <- lags_long %>% 
+  filter(NDVI < median_ndvi, d.NDVI > 0, transients > 0.025) %>% 
+  group_by(time_lag) %>% 
+  summarise(x.neg_y.pos = mean(transients))
+x.pos_y.pos <- lags_long %>% 
+  filter(NDVI >= median_ndvi, d.NDVI > 0, transients > 0.025) %>% 
+  group_by(time_lag) %>% 
+  summarise(x.pos_y.pos = mean(transients))
+x.pos_y.neg <- lags_long %>% 
+  filter(NDVI >= median_ndvi, d.NDVI <= 0, transients > 0.025) %>% 
+  group_by(time_lag) %>% 
+  summarise(x.pos_y.neg = mean(transients))
+x.neg_y.neg <- lags_long %>% 
+  filter(NDVI < median_ndvi, d.NDVI <= 0, transients > 0.025) %>% 
+  group_by(time_lag) %>% 
+  summarise(x.neg_y.neg = mean(transients))
+
+quadrant_means <- plyr::join_all(list(x.neg_y.pos, x.pos_y.pos, x.pos_y.neg, x.neg_y.neg), by = "time_lag")
+quadrant_means_long <- gather(quadrant_means, key = "quadrant", value = "mean_transients", 2:5)
+
+ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
+  geom_point(size = 2) +
+  geom_smooth() +
+  theme_bw() +
+  xlab("Lag Time") +
+  ylab("Mean Transients (above 0.025)") +
+  theme(axis.text.x = element_text(angle = -45, hjust = -.1))
+
+### 3D plots ###
+library(spatstat)
+
+point_pattern3 <- pp3(x = lags$NDVI, y = lags$d.NDVI, z = lags$transientT0, 
+                      as.box3(xrange = c(min(lags$NDVI), max(lags$NDVI)), 
+                              yrange = c(min(lags$d.NDVI), max(lags$d.NDVI)), 
+                              zrange = c(min(lags$transientT0), max(lags$transientT0))))
+plot.pp3(point_pattern3)
+plot.pp3(point_pattern3, legend = TRUE)
+
+library(plotly)
+
+plot <- plot_ly(lags, x = ~NDVI, y = ~d.NDVI, z = ~transientT6) %>% 
+  add_markers(fill = "tozeroy") %>% 
+  layout(scene = list(xaxis = list(title = "NDVI"),
+                      yaxis = list(title = "d.NDVI"),
+                      zaxis = list(title = "transients")))
+
