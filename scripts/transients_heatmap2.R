@@ -274,34 +274,39 @@ ggsave("plots/GIMMs_plots/heatmap_2digit.png")
 
 # get quadrants
 x.neg_y.pos <- lags_long %>% 
-  filter(NDVI < median_ndvi, d.NDVI > 0, transients > 0.025) %>% 
+  filter(NDVI < median_ndvi, d.NDVI > 0, transients > 0.05) %>% 
   group_by(time_lag) %>% 
   summarise(x.neg_y.pos = mean(transients))
 x.pos_y.pos <- lags_long %>% 
-  filter(NDVI >= median_ndvi, d.NDVI > 0, transients > 0.025) %>% 
+  filter(NDVI >= median_ndvi, d.NDVI > 0, transients > 0.05) %>% 
   group_by(time_lag) %>% 
   summarise(x.pos_y.pos = mean(transients))
 x.pos_y.neg <- lags_long %>% 
-  filter(NDVI >= median_ndvi, d.NDVI <= 0, transients > 0.025) %>% 
+  filter(NDVI >= median_ndvi, d.NDVI <= 0, transients > 0.05) %>% 
   group_by(time_lag) %>% 
   summarise(x.pos_y.neg = mean(transients))
 x.neg_y.neg <- lags_long %>% 
-  filter(NDVI < median_ndvi, d.NDVI <= 0, transients > 0.025) %>% 
+  filter(NDVI < median_ndvi, d.NDVI <= 0, transients > 0.05) %>% 
   group_by(time_lag) %>% 
   summarise(x.neg_y.neg = mean(transients))
 
 quadrant_means <- plyr::join_all(list(x.neg_y.pos, x.pos_y.pos, x.pos_y.neg, x.neg_y.neg), by = "time_lag")
 quadrant_means_long <- gather(quadrant_means, key = "quadrant", value = "mean_transients", 2:5)
 
-ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
+plot_high <- ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
   geom_point(size = 2) +
   geom_smooth() +
   theme_bw() +
   xlab("Lag Time") +
   ylab("Mean Transients (above 0.025)") +
   theme(axis.text.x = element_text(angle = -45, hjust = -.1))
-ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants.png")
+ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants_0.05.png")
 
+library(ggpubr)
+plot_arranged <- ggarrange(plot_low, plot_mid, plot_high, nrow = 1, ncol = 3,
+          labels = c("transients > 0.01", "transients > 0.025", "transients > 0.05"))
+plot_arranged
+ggsave("plots/GIMMs_plots/transients_through_time_different_cutoffs.png")
 
 ### 3D plots ###
 library(spatstat)
