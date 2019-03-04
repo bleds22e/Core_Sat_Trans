@@ -250,7 +250,7 @@ ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) +
   scale_fill_viridis_c(limits = c(0, 0.18)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
-ggsave("plots/GIMMs_plots/heatmap_points.png")
+#ggsave("plots/GIMMs_plots/heatmap_points.png")
 
 ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
   stat_summary_2d() +
@@ -259,7 +259,7 @@ ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) +
   scale_fill_viridis_c(limits = c(0, 0.18)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
-ggsave("plots/GIMMs_plots/heatmap_summary.png")
+#ggsave("plots/GIMMs_plots/heatmap_summary.png")
 
 ggplot(data = lags_long, aes(x = round(NDVI,2), y = round(d.NDVI, 2))) + 
   geom_tile(aes(fill = round(transients, 2))) + 
@@ -268,7 +268,7 @@ ggplot(data = lags_long, aes(x = round(NDVI,2), y = round(d.NDVI, 2))) +
   scale_fill_viridis_c(limits = c(0, 0.18)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
-ggsave("plots/GIMMs_plots/heatmap_2digit.png")
+#ggsave("plots/GIMMs_plots/heatmap_2digit.png")
 
 ### Get "contingency" tables ###
 
@@ -293,14 +293,14 @@ x.neg_y.neg <- lags_long %>%
 quadrant_means <- plyr::join_all(list(x.neg_y.pos, x.pos_y.pos, x.pos_y.neg, x.neg_y.neg), by = "time_lag")
 quadrant_means_long <- gather(quadrant_means, key = "quadrant", value = "mean_transients", 2:5)
 
-plot_high <- ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
+ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
   geom_point(size = 2) +
   geom_smooth() +
   theme_bw() +
   xlab("Lag Time") +
   ylab("Mean Transients (above 0.025)") +
   theme(axis.text.x = element_text(angle = -45, hjust = -.1))
-ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants_0.05.png")
+#ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants_0.05.png")
 
 library(ggpubr)
 plot_arranged <- ggarrange(plot_low, plot_mid, plot_high, nrow = 1, ncol = 3,
