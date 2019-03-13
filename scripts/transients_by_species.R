@@ -76,7 +76,7 @@ abund <- portalr::abundance(path = "repo", level = "Site", type = "Rodents",
 # pre 1984, 1984-2000, 2000-2009, post-2009 
 
 comm1 <- filter(abund, period <= 75) # pre-1984
-comm2 <- filter(abund, period > 75 & period < 261) # 1984-2000
+comm2 <- filter(abund, period > 75 & period < 261) # 1984-1999
 comm3 <- filter(abund, period >= 261 & period < 381) # 2000-2009
 comm4 <- filter(abund, period >= 381) # post-2009
 
@@ -141,6 +141,60 @@ for (i in 2:nrow(NDVI_transient)){
   
 }
 
+# add in rows for each species with NAs based on community
+
+NDVI_transient_NA <- NDVI_transient[is.na(NDVI_transient$species),]
+
+trans1 <- as.data.frame(unique(rel_abund_trans_sp1$species)) 
+colnames(trans1) <- c("species")
+trans2 <- as.data.frame(unique(rel_abund_trans_sp2$species)) 
+colnames(trans2) <- c("species")
+trans3 <- as.data.frame(unique(rel_abund_trans_sp3$species)) 
+colnames(trans3) <- c("species")
+trans4 <- as.data.frame(unique(rel_abund_trans_sp4$species)) 
+colnames(trans4) <- c("species")
+
+comm1_na <- NDVI_transient_NA[NDVI_transient_NA$year < 1984,]
+comm2_na <- filter(NDVI_transient_NA, year > 1983 & year < 2000)
+comm3_na <- filter(NDVI_transient_NA, year >= 2000 & year < 2010)
+comm4_na <- filter(NDVI_transient_NA, year >= 2010)
+
+comm_na_species <- list()
+n = 1
+
+communities <- list(comm1_na, comm2_na, comm3_na, comm4_na)
+transient_sp <- list(trans1, trans2, trans3, trans4)
+
+for(c in 1:length(communities)){
+  
+  comm <- communities[[c]]
+  trans <- transient_sp[[c]]
+  
+  for (i in 1:nrow(comm)){
+    
+    row <- comm[i,]
+    
+    for(p in 1:nrow(trans)){
+      
+      row$species = trans[p,]
+      comm_na_species[[n]] <- row
+      n = n +1
+      
+    }
+  }
+}
+
+comm_na_species <- do.call(rbind, comm_na_species)
+
+for(i in 1:nrow(NDVI_transient)){
+  if(is.na(NDVI_transient$period[i]) & !is.na(NDVI_transient$species[i])){
+    NDVI_transient$trans_rel_abund[i] <- NA
+  }
+}
+
+
+NDVI_transient <- NDVI_transient[!is.na(NDVI_transient$species),]
+NDVI_transient <- rbind(NDVI_transient, comm_na_species)
 
 #==========================================================
 # PLOTTING 
@@ -155,87 +209,133 @@ NDVI_transient_long <- NDVI_transient_long[!is.na(NDVI_transient_long$species),]
 
 # Time Series of NDVI and transients by species #
 ggplot(data = NDVI_transient_long, aes(x = period, y = value)) +
-  geom_line(aes(color = data_type)) +
+  geom_line(aes(color = data_type), size = 1) +
   facet_wrap(~ species, ncol = 3)
+ggsave("plots/GIMMs_plots/timeseries_by_species.png")
 
 #==========================================================
 # MAKE NEW DATAFRAME FOR HEATMAP #
 
 NDVI_transient$date <- as.yearmon(paste(NDVI_transient$year, NDVI_transient$month), "%Y %m") 
+species_dfs_list <- split(NDVI_transient, NDVI_transient$species)
+species_dfs_list$PH1 <- filter(species_dfs_list$PH, year < 2000)
+species_dfs_list$PH2 <- filter(species_dfs_list$PH, year > 2009)
+species_dfs_list$SH1 <- filter(species_dfs_list$SH, year < 2000)
+species_dfs_list$SH2 <- filter(species_dfs_list$SH, year > 2009)
+species_dfs_list$PH <- NULL
+species_dfs_list$SH <- NULL
+
+species_dfs_list <- species_dfs_list[sapply(species_dfs_list, function(x) dim(x)[1] > 0)]
 
 # make outline of data frame
-nrows <- length(NDVI_transient$date)
-lags <- data.frame(NDVI = NDVI_transient$ndvi,
-                   d.NDVI = numeric(nrows),
-                   transientT0 = numeric(nrows),
-                   transientT1 = numeric(nrows),
-                   transientT2 = numeric(nrows),
-                   transientT3 = numeric(nrows),
-                   transientT4 = numeric(nrows),
-                   transientT5 = numeric(nrows),
-                   transientT6 = numeric(nrows),
-                   transientT7 = numeric(nrows),
-                   transientT8 = numeric(nrows),
-                   transientT9 = numeric(nrows),
-                   transientT10 = numeric(nrows),
-                   transientT11 = numeric(nrows))
+lags_dfs <- list()
 
-######### NEED TO DO THIS FOR EACH SPECIES ##################### !!!!
-
-for (i in 2:length(NDVI_transient$date)){
+for (df in 1:length(species_dfs_list)){
   
-  # find change in NDVI
-  lags$d.NDVI[i] <- lags$NDVI[i] - lags$NDVI[i-1]
+  nrows <- nrow(species_dfs_list[[df]])
+  lags <- data.frame(species = character(nrows),
+                     NDVI = numeric(nrows),
+                     d.NDVI = numeric(nrows),
+                     transientT0 = numeric(nrows),
+                     transientT1 = numeric(nrows),
+                     transientT2 = numeric(nrows),
+                     transientT3 = numeric(nrows),
+                     transientT4 = numeric(nrows),
+                     transientT5 = numeric(nrows),
+                     transientT6 = numeric(nrows),
+                     transientT7 = numeric(nrows),
+                     transientT8 = numeric(nrows),
+                     transientT9 = numeric(nrows),
+                     transientT10 = numeric(nrows),
+                     transientT11 = numeric(nrows))
   
-  # find the transient rel abundances
-  lags$transientT0[i] <- NDVI_transient$trans_rel_abund[i]
-  lags$transientT1[i] <- NDVI_transient$trans_rel_abund[i + 1]
-  lags$transientT2[i] <- NDVI_transient$trans_rel_abund[i + 2]
-  lags$transientT3[i] <- NDVI_transient$trans_rel_abund[i + 3]
-  lags$transientT4[i] <- NDVI_transient$trans_rel_abund[i + 4]
-  lags$transientT5[i] <- NDVI_transient$trans_rel_abund[i + 5]
-  lags$transientT6[i] <- NDVI_transient$trans_rel_abund[i + 6]
-  lags$transientT7[i] <- NDVI_transient$trans_rel_abund[i + 7]
-  lags$transientT8[i] <- NDVI_transient$trans_rel_abund[i + 8]
-  lags$transientT9[i] <- NDVI_transient$trans_rel_abund[i + 9]
-  lags$transientT10[i] <- NDVI_transient$trans_rel_abund[i + 10]
-  lags$transientT11[i] <- NDVI_transient$trans_rel_abund[i + 11]
+  lags$species <- species_dfs_list[[df]]$species
+  lags$NDVI <- species_dfs_list[[df]]$ndvi
+  
+  for (i in 2:nrows){
+    
+    # find change in NDVI
+    lags$d.NDVI[i] <- lags$NDVI[i] - lags$NDVI[i-1]
+    
+    # find the transient rel abundances
+    lags$transientT0[i] <- species_dfs_list[[df]]$trans_rel_abund[i]
+    lags$transientT1[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 1]
+    lags$transientT2[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 2]
+    lags$transientT3[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 3]
+    lags$transientT4[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 4]
+    lags$transientT5[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 5]
+    lags$transientT6[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 6]
+    lags$transientT7[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 7]
+    lags$transientT8[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 8]
+    lags$transientT9[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 9]
+    lags$transientT10[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 10]
+    lags$transientT11[i] <- species_dfs_list[[df]]$trans_rel_abund[i + 11]
+    
+  }
+  
+  lags_dfs[[df]] <- lags
   
 }
 
-lags <- lags[complete.cases(lags),]
+lags_dfs <- do.call(rbind, lags_dfs)
+lags_dfs <- lags_dfs[complete.cases(lags_dfs),]
+
+lags_long <- tidyr::gather(lags_dfs, "time_lag", "transients", 4:15)
+
+new_levels = c("transientT0", "transientT1", "transientT2",
+               "transientT3", "transientT4", "transientT5",
+               "transientT6", "transientT7", "transientT8",
+               "transientT9", "transientT10", "transientT11")
+lags_long <- arrange(mutate(lags_long, time_lag = factor(time_lag, levels = new_levels)), time_lag)
+
 
 ### Get "contingency" tables ###
 
-# get quadrants
-x.neg_y.pos <- lags_long %>% 
-  filter(NDVI < median_ndvi, d.NDVI > 0, transients > 0.05) %>% 
-  group_by(time_lag) %>% 
-  summarise(x.neg_y.pos = mean(transients))
-x.pos_y.pos <- lags_long %>% 
-  filter(NDVI >= median_ndvi, d.NDVI > 0, transients > 0.05) %>% 
-  group_by(time_lag) %>% 
-  summarise(x.pos_y.pos = mean(transients))
-x.pos_y.neg <- lags_long %>% 
-  filter(NDVI >= median_ndvi, d.NDVI <= 0, transients > 0.05) %>% 
-  group_by(time_lag) %>% 
-  summarise(x.pos_y.neg = mean(transients))
-x.neg_y.neg <- lags_long %>% 
-  filter(NDVI < median_ndvi, d.NDVI <= 0, transients > 0.05) %>% 
-  group_by(time_lag) %>% 
-  summarise(x.neg_y.neg = mean(transients))
+lags_dfs_list <- split(lags_long, lags_long$species)
+lags_dfs_list <- lags_dfs_list[sapply(lags_dfs_list, function(x) dim(x)[1] > 0)]
 
-quadrant_means <- plyr::join_all(list(x.neg_y.pos, x.pos_y.pos, x.pos_y.neg, x.neg_y.neg), by = "time_lag")
-quadrant_means_long <- gather(quadrant_means, key = "quadrant", value = "mean_transients", 2:5)
+quadrant_means_list <- list()
 
-ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
+for (sp in 1:length(lags_dfs_list)){
+  
+  data <- lags_dfs_list[[sp]]
+  
+  x.neg_y.pos <- data %>% 
+    filter(NDVI < 0, d.NDVI > 0, transients > 0.005) %>% 
+    group_by(time_lag) %>% 
+    summarise(x.neg_y.pos = round(mean(transients), 5))
+  x.pos_y.pos <- data %>% 
+    filter(NDVI >= 0, d.NDVI > 0, transients > 0.005) %>% 
+    group_by(time_lag) %>% 
+    summarise(x.pos_y.pos = round(mean(transients), 5))
+  x.pos_y.neg <- data %>% 
+    filter(NDVI >= 0, d.NDVI <= 0, transients > 0.005) %>% 
+    group_by(time_lag) %>% 
+    summarise(x.pos_y.neg = round(mean(transients), 5))
+  x.neg_y.neg <- data %>% 
+    filter(NDVI < 0, d.NDVI <= 0, transients > 0.005) %>% 
+    group_by(time_lag) %>% 
+    summarise(x.neg_y.neg = round(mean(transients), 5))
+  
+  quadrant_means <- plyr::join_all(list(x.neg_y.pos, x.pos_y.pos, x.pos_y.neg, x.neg_y.neg), by = "time_lag")
+  quadrant_means_long <- gather(quadrant_means, key = "quadrant", value = "mean_transients", 2:5)
+  quadrant_means_long$species <- lags_dfs_list[[sp]]$species[1]
+  quadrant_means_list[[sp]] <- quadrant_means_long
+  
+}
+
+quadrant_means_by_sp <- do.call(rbind, quadrant_means_list)
+quadrant_means_by_sp <- quadrant_means_by_sp[complete.cases(quadrant_means_by_sp),]
+
+ggplot(quadrant_means_by_sp, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
   geom_point(size = 2) +
-  geom_smooth() +
+  geom_line() +
+  facet_wrap(~ species) +
   theme_bw() +
   xlab("Lag Time") +
-  ylab("Mean Transients (above 0.025)") +
+  ylab("Mean Transients (above 0.005)") +
   theme(axis.text.x = element_text(angle = -45, hjust = -.1))
-
+ggsave("plots/GIMMs_plots/species_through_time_by_quadrant_0.005.png")
 
 
 #============================================================
