@@ -306,25 +306,81 @@ library(ggpubr)
 plot_arranged <- ggarrange(plot_low, plot_mid, plot_high, nrow = 1, ncol = 3,
           labels = c("transients > 0.01", "transients > 0.025", "transients > 0.05"))
 plot_arranged
-ggsave("plots/GIMMs_plots/transients_through_time_different_cutoffs.png")
+#ggsave("plots/GIMMs_plots/transients_through_time_different_cutoffs.png")
 
 ### 3D plots ###
-library(spatstat)
+# library(spatstat)
+# 
+# point_pattern3 <- pp3(x = lags$NDVI, y = lags$d.NDVI, z = lags$transientT0, 
+#                       as.box3(xrange = c(min(lags$NDVI), max(lags$NDVI)), 
+#                               yrange = c(min(lags$d.NDVI), max(lags$d.NDVI)), 
+#                               zrange = c(min(lags$transientT0), max(lags$transientT0))))
+# plot.pp3(point_pattern3)
+# plot.pp3(point_pattern3, legend = TRUE)
+# 
+# library(plotly)
+# 
+# plot <- plot_ly(lags, x = ~NDVI, y = ~d.NDVI, z = ~transientT6) %>% 
+#   add_markers(fill = "tozeroy") %>% 
+#   layout(scene = list(xaxis = list(title = "NDVI"),
+#                       yaxis = list(title = "d.NDVI"),
+#                       zaxis = list(title = "transients")))
+# 
+# plot_ly(x = lags$NDVI, y = lags$d.NDVI, z = lags$transientT5,
+#         type = 'scatter3d', mode = "markers", color = lags$transientT5)
 
-point_pattern3 <- pp3(x = lags$NDVI, y = lags$d.NDVI, z = lags$transientT0, 
-                      as.box3(xrange = c(min(lags$NDVI), max(lags$NDVI)), 
-                              yrange = c(min(lags$d.NDVI), max(lags$d.NDVI)), 
-                              zrange = c(min(lags$transientT0), max(lags$transientT0))))
-plot.pp3(point_pattern3)
-plot.pp3(point_pattern3, legend = TRUE)
+### Get Timeseries Plots ###
 
-library(plotly)
+# add community designation to dataframe
+comm1 <- filter(abund, period <= 75) # pre-1984
+comm2 <- filter(abund, period > 75 & period < 261) # 1984-2000
+comm3 <- filter(abund, period >= 261 & period < 381) # 2000-2009
+comm4 <- filter(abund, period >= 381) # post-2009
 
-plot <- plot_ly(lags, x = ~NDVI, y = ~d.NDVI, z = ~transientT6) %>% 
-  add_markers(fill = "tozeroy") %>% 
-  layout(scene = list(xaxis = list(title = "NDVI"),
-                      yaxis = list(title = "d.NDVI"),
-                      zaxis = list(title = "transients")))
+NDVI_transient$community <- NA
+for (i in 1:length(NDVI_transient$community)) {
+  
+  if (is.na(NDVI_transient$period[i])) {
+    NDVI_transient$community[i] = NA
+  } else if (NDVI_transient$period[i] <= 75) {
+    NDVI_transient$community[i] = 'comm1'
+  } else if (NDVI_transient$period[i] > 75 & NDVI_transient$period[i] < 261) {
+    NDVI_transient$community[i] = "comm2"
+  } else if (NDVI_transient$period[i] >= 261 & NDVI_transient$period[i] < 381) {
+    NDVI_transient$community[i] = "comm3"
+  } else if (NDVI_transient$period[i] >= 381) {
+    NDVI_transient$community[i] = "comm4"
+  }
+  
+  if (is.na(NDVI_transient$community[i])) {
+    NDVI_transient$community[i] <- NDVI_transient$community[i-1]
+  }
+  
+  if (is.na(NDVI_transient$community[i])) {
+    NDVI_transient$community[i] <- NDVI_transient$community[i-1]
+  }
+  
+}
 
-plot_ly(x = lags$NDVI, y = lags$d.NDVI, z = lags$transientT5,
-        type = 'scatter3d', mode = "markers", color = lags$transientT5)
+
+median <- median(NDVI_transient$ndvi, na.rm = TRUE)
+for (i in 1:length(NDVI_transient$ndvi_median)) {
+  if (!is.na(NDVI_transient$ndvi[i])){
+    NDVI_transient$ndvi_median[i] <- NDVI_transient$ndvi[i] - median
+  } else {
+    NDVI_transient$ndvi_median[i] <- NA
+  }
+}
+
+ggplot(NDVI_transient) +
+  geom_hline(yintercept = 0, color = "gray") +
+  geom_line(aes(x = date, y = ndvi_median, color = "NDVI")) +
+  geom_line(aes(x = date, y = trans_rel_abund, color = "Transients")) +
+  facet_wrap(vars(community), scales = "free", nrow = 4) +
+  scale_color_manual("",
+                     breaks = c("NDVI", "Transients"),
+                     values = c("black", "green")) +
+  ylab('NDVI value / Rel.Abund') +
+  xlab('Date') +
+  theme_bw()
+ggsave("plots/GIMMs_plots/timeseries_by_community.png")
