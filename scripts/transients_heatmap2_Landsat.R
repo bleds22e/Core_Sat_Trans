@@ -11,7 +11,7 @@ library(tidyverse)
 rdat <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent.csv"), na.strings = '')
 trapping <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent_trapping.csv"))
 NDVI <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/NDVI/Landsat_monthly_NDVI.csv"))
-  # different NDVI file
+# using Landsat again instead of GIMMs
 
 # FUNCTIONS #
 
@@ -186,6 +186,7 @@ NDVI_transient$trans_rel_abund[267:268] <- 0
 NDVI_transient$date <- as.yearmon(paste(NDVI_transient$year, NDVI_transient$month), "%Y %m") 
 
 # make outline of data frame
+# is the lags dataframe doing what I think it is or is it skipping rows?
 nrows <- length(NDVI_transient$date)
 lags <- data.frame(NDVI = NDVI_transient$ndvi,
                    d.NDVI = numeric(nrows),
@@ -250,7 +251,7 @@ ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) +
   scale_fill_viridis_c(limits = c(0, 0.18)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
-#ggsave("plots/GIMMs_plots/heatmap_points.png")
+#ggsave("plots/Landsat_plots/heatmap_points.png")
 
 ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) + 
   stat_summary_2d() +
@@ -259,7 +260,7 @@ ggplot(data = lags_long, aes(x = NDVI, y = d.NDVI, z = transients)) +
   scale_fill_viridis_c(limits = c(0, 0.18)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
-#ggsave("plots/GIMMs_plots/heatmap_summary.png")
+#ggsave("plots/Landsat_plots/heatmap_summary.png")
 
 ggplot(data = lags_long, aes(x = round(NDVI,2), y = round(d.NDVI, 2))) + 
   geom_tile(aes(fill = round(transients, 2))) + 
@@ -268,45 +269,45 @@ ggplot(data = lags_long, aes(x = round(NDVI,2), y = round(d.NDVI, 2))) +
   scale_fill_viridis_c(limits = c(0, 0.18)) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4) +
   theme_bw()
-#ggsave("plots/GIMMs_plots/heatmap_2digit.png")
+#ggsave("plots/Landsat_plots/heatmap_2digit.png")
 
 ### Get "contingency" tables ###
 
 # get quadrants
 x.neg_y.pos <- lags_long %>% 
-  filter(NDVI < median_ndvi, d.NDVI > 0, transients > 0.05) %>% 
+  filter(NDVI < median_ndvi, d.NDVI > 0, transients > 0.01) %>% 
   group_by(time_lag) %>% 
   summarise(x.neg_y.pos = mean(transients))
 x.pos_y.pos <- lags_long %>% 
-  filter(NDVI >= median_ndvi, d.NDVI > 0, transients > 0.05) %>% 
+  filter(NDVI >= median_ndvi, d.NDVI > 0, transients > 0.01) %>% 
   group_by(time_lag) %>% 
   summarise(x.pos_y.pos = mean(transients))
 x.pos_y.neg <- lags_long %>% 
-  filter(NDVI >= median_ndvi, d.NDVI <= 0, transients > 0.05) %>% 
+  filter(NDVI >= median_ndvi, d.NDVI <= 0, transients > 0.01) %>% 
   group_by(time_lag) %>% 
   summarise(x.pos_y.neg = mean(transients))
 x.neg_y.neg <- lags_long %>% 
-  filter(NDVI < median_ndvi, d.NDVI <= 0, transients > 0.05) %>% 
+  filter(NDVI < median_ndvi, d.NDVI <= 0, transients > 0.01) %>% 
   group_by(time_lag) %>% 
   summarise(x.neg_y.neg = mean(transients))
 
 quadrant_means <- plyr::join_all(list(x.neg_y.pos, x.pos_y.pos, x.pos_y.neg, x.neg_y.neg), by = "time_lag")
 quadrant_means_long <- gather(quadrant_means, key = "quadrant", value = "mean_transients", 2:5)
 
-ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
+plot_low <- ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, group = quadrant)) + 
   geom_point(size = 2) +
   geom_smooth() +
   theme_bw() +
   xlab("Lag Time") +
-  ylab("Mean Transients (above 0.025)") +
+  ylab("Mean Transients") +
   theme(axis.text.x = element_text(angle = -45, hjust = -.1))
-#ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants_0.05.png")
+ggsave("plots/Landsat_plots/transients_through_time_by_quadrants_0.025.png")
 
 library(ggpubr)
 plot_arranged <- ggarrange(plot_low, plot_mid, plot_high, nrow = 1, ncol = 3,
-          labels = c("transients > 0.01", "transients > 0.025", "transients > 0.05"))
+                           labels = c("transients > 0.01", "transients > 0.025", "transients > 0.05"))
 plot_arranged
-#ggsave("plots/GIMMs_plots/transients_through_time_different_cutoffs.png")
+#ggsave("plots/Landsat_plots/transients_through_time_different_cutoffs.png")
 
 ### 3D plots ###
 # library(spatstat)
@@ -383,4 +384,7 @@ ggplot(NDVI_transient) +
   ylab('NDVI value / Rel.Abund') +
   xlab('Date') +
   theme_bw()
-ggsave("plots/GIMMs_plots/timeseries_by_community.png")
+ggsave("plots/Landsat_plots/timeseries_by_community.png")
+
+# Cross-correlation function
+ccf(x = ccf_df$ndvi_median, y = ccf_df$trans_rel_abund)
