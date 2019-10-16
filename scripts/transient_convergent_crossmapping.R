@@ -5,11 +5,12 @@
 
 library(zoo)
 library(tidyverse)
+library(RCurl)
 library(rEDM)
 
 rdat <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent.csv"), na.strings = '')
 trapping <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent_trapping.csv"))
-NDVI <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/NDVI/Landsat_monthly_NDVI.csv"))
+NDVI <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/NDVI/monthly_NDVI.csv"))
 
 # FUNCTIONS #
 
@@ -145,9 +146,11 @@ rel_abund_data <- rel_abund_data[-c(48, 52, 56, 85, 114, 118, 148, 179, 212,
 #=========================================================
 # COMBINE NDVI AND TRANSIENT DATA
 
-# add transient relative abundance
-NDVI_transient <- full_join(rel_abund_data, NDVI) %>% 
-  rename("ndvi" = "x")
+# add transient relative abundance -- landsat
+# NDVI_transient <- full_join(rel_abund_data, NDVI) %>% 
+#   rename("ndvi" = "x")
+
+NDVI_transient <- full_join(rel_abund_data, NDVI)
 
 # make sure there's a row for every yearmon combo
 all_dates <- expand.grid(month = seq(1:12), year = 1978:2018)
@@ -183,7 +186,14 @@ NDVI_transient$trans_rel_abund[267:268] <- 0
 # Attemping EDM and Convergent Crossmapping
 #=============================================================
 
-new_df <- NDVI_transient[-c(1:178, 493:513),] %>% 
+# landsat df
+# new_df <- NDVI_transient[-c(1:178, 493:513),] %>% 
+#   tibble::rowid_to_column() %>% 
+#   ungroup() %>% 
+#   select(rowid, trans_rel_abund, ndvi)
+
+#gimms df
+new_df <- NDVI_transient[-c(1:50, 441:513),] %>% 
   tibble::rowid_to_column() %>% 
   ungroup() %>% 
   select(rowid, trans_rel_abund, ndvi)
@@ -191,7 +201,7 @@ new_df <- NDVI_transient[-c(1:178, 493:513),] %>%
 ts <- new_df$trans_rel_abund
 lib <- c(1, length(ts))
 pred <- c(1, length(ts))
-simplex_output <- simplex(ts, lib, pred, E = 1:20, silent = TRUE)
+simplex_output <- simplex(ts, lib, pred, E = 1:15, silent = TRUE)
 plot(simplex_output$E, simplex_output$rho, type = "l", xlab = "Embedding Dimension (E)", 
      ylab = "Forecast Skill (rho)")
 
@@ -207,7 +217,7 @@ ccm_rho_matrix <- matrix(NA, nrow = length(vars), ncol = length(vars), dimnames 
 
 for (ccm_from in vars) {
   for (ccm_to in vars[vars != ccm_from]) {
-    out_temp <- ccm(new_df, E = 5, lib_column = ccm_from, target_column = ccm_to, 
+    out_temp <- ccm(new_df, E = 6, lib_column = ccm_from, target_column = ccm_to, 
                     lib_sizes = n, replace = FALSE, silent = TRUE)
     ccm_rho_matrix[ccm_from, ccm_to] <- out_temp$rho
   }
@@ -228,6 +238,33 @@ head(ccm_rho_matrix)
 head(corr_matrix)
 
 # stopped here -- how do you determine library size?!
-trans_xmap_ndvi <- ccm(new_df, E = 11, random_libs = TRUE, lib_column = "trans_rel_abund", 
-                        target_column = "ndvi", lib_sizes = seq(10, 75, by = 5), num_samples = 300, 
+trans_xmap_ndvi <- ccm(new_df, E = 6, random_libs = TRUE, lib_column = "trans_rel_abund", 
+                        target_column = "ndvi", lib_sizes = seq(10, 400, by = 10), num_samples = 500, 
                         silent = TRUE)
+ndvi_xmap_trans <- ccm(new_df, E = 6, random_libs = TRUE, lib_column = "ndvi", 
+                       target_column = "trans_rel_abund", lib_sizes = seq(10, 400, by = 10), num_samples = 500, 
+                       silent = TRUE)
+ccm_out <- list(ccm_means(trans_xmap_ndvi), ccm_means(ndvi_xmap_trans))
+
+plot(ccm_out[[1]]$lib_size, pmax(0, ccm_out[[1]]$rho), type = "l", col = "red",  
+     xlab = "Library Size", ylab = "Cross Map Skill (rho)", ylim = c(0, 1))
+lines(ccm_out[[2]]$lib_size, pmax(0, ccm_out[[2]]$rho), col = "blue")
+abline(h = corr_matrix['trans_rel_abund', 'ndvi'], col = "black", lty = 2)
+legend(x = "topright", legend = c("trans_xmap_ndvi", "ndvi_xmap_trans"),
+       col = c("red", "blue"), lwd = 1, inset = 0.02)
+
+params <- expand.grid(lib_column = vars, target_column = vars, tp = -10:15)
+params <- params[params$lib_column != params$target_column, ]
+params$E <- 6
+
+output <- do.call(rbind, lapply(seq_len(NROW(params)), function(i) {
+  ccm(new_df, E = params$E[i], lib_sizes = NROW(new_df), 
+      random_libs = FALSE, lib_column = params$lib_column[i], target_column = params$target_column[i], 
+      tp = params$tp[i], silent = TRUE)
+}))
+
+output$direction <- paste(output$lib_column, "xmap to\n", output$target_column)
+
+time_delay_ccm_fig <- ggplot(output, aes(x = tp, y = rho, color = direction)) + 
+  geom_line() + theme_bw()
+print(time_delay_ccm_fig)
