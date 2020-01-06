@@ -13,7 +13,7 @@ library(portalr)
 trapping <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent_trapping.csv"))
 moon_dates <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/moon_dates.csv"))
 
-ndvi <- portalr::ndvi(level = "newmoon", fill = TRUE) %>% 
+ndvi <- ndvi(level = "newmoon", fill = TRUE) %>% 
   filter(newmoonnumber < 452) # filter out forecasted ndvi data--real data ends at 2013
 abund <- portalr::abundance(path = "repo", level = "Site", type = "Rodents",
                             plots = "all", unknowns = F, shape = "flat", 
@@ -309,4 +309,99 @@ ggplot(NDVI_transient) +
   ylab('NDVI value / Rel.Abund') +
   xlab('Date') +
   theme_bw()
-ggsave("plots/newmoons_plots/timeseries_by_community.png")
+#ggsave("plots/newmoons_plots/timeseries_by_community.png")
+
+#================================================================
+# RUN EDM and CCF -- script from transient_convergent_crossmapping.R
+
+new_df <- NDVI_transient[-c(1:49, 452:523),] %>% 
+  ungroup() %>% 
+  select(newmoondate, trans_rel_abund, ndvi)
+
+# CCF
+
+acf(new_df$ndvi)
+lag.plot(new_df$ndvi)
+pacf(new_df$ndvi)
+fit <- forecast::auto.arima(new_df$ndvi)
+
+acf(new_df$trans_rel_abund)
+lag.plot(new_df$trans_rel_abund)
+pacf(new_df$trans_rel_abund)
+fit2 <- forecast::auto.arima(new_df$trans_rel_abund)
+
+ccf(new_df$ndvi, new_df$trans_rel_abund)
+
+# CONVERGENT CROSS-MAPPING
+library(rEDM)
+
+ts <- new_df$trans_rel_abund
+lib <- c(1, length(ts))
+pred <- c(1, length(ts))
+simplex_output <- simplex(ts, lib, pred, E = 1:15, silent = TRUE)
+plot(simplex_output$E, simplex_output$rho, type = "l", xlab = "Embedding Dimension (E)", 
+     ylab = "Forecast Skill (rho)")
+
+
+smap_output <- list(s_map(ts, lib, pred, E = 11, silent = TRUE))
+plot(smap_output[[1]]$theta, smap_output[[1]]$rho, type = "l", xlim = c(0, 4), 
+     xlab = "Nonlinearity (theta)", ylab = "Forecast Skill (rho)")
+
+vars <- colnames(new_df[2:3])
+n <- nrow(new_df)
+
+ccm_rho_matrix <- matrix(NA, nrow = length(vars), ncol = length(vars), dimnames = list(vars,vars))
+
+for (ccm_from in vars) {
+  for (ccm_to in vars[vars != ccm_from]) {
+    out_temp <- ccm(new_df, E = 6, lib_column = ccm_from, target_column = ccm_to, 
+                    lib_sizes = n, replace = FALSE, silent = TRUE)
+    ccm_rho_matrix[ccm_from, ccm_to] <- out_temp$rho
+  }
+}
+
+
+corr_matrix <- array(NA, dim = c(length(vars), length(vars)), dimnames = list(vars, vars))
+
+for (ccm_from in vars) {
+  for (ccm_to in vars[vars != ccm_from]) {
+    cf_temp <- ccf(new_df[, ccm_from], new_df[, ccm_to], type = "correlation", 
+                   lag.max = 12, plot = FALSE)$acf
+    corr_matrix[ccm_from, ccm_to] <- max(abs(cf_temp))
+  }
+}
+
+head(ccm_rho_matrix)
+head(corr_matrix)
+
+trans_xmap_ndvi <- ccm(new_df, E = 6, random_libs = TRUE, lib_column = "trans_rel_abund", 
+                       target_column = "ndvi", lib_sizes = seq(10, 400, by = 10), num_samples = 500, 
+                       silent = TRUE)
+ndvi_xmap_trans <- ccm(new_df, E = 6, random_libs = TRUE, lib_column = "ndvi", 
+                       target_column = "trans_rel_abund", lib_sizes = seq(10, 400, by = 10), num_samples = 500, 
+                       silent = TRUE)
+ccm_out <- list(ccm_means(trans_xmap_ndvi), ccm_means(ndvi_xmap_trans))
+
+plot(ccm_out[[1]]$lib_size, pmax(0, ccm_out[[1]]$rho), type = "l", col = "red",  
+     xlab = "Library Size", ylab = "Cross Map Skill (rho)", ylim = c(0, 1))
+lines(ccm_out[[2]]$lib_size, pmax(0, ccm_out[[2]]$rho), col = "blue")
+abline(h = corr_matrix['trans_rel_abund', 'ndvi'], col = "black", lty = 2)
+legend(x = "topright", legend = c("trans_xmap_ndvi", "ndvi_xmap_trans"),
+       col = c("red", "blue"), lwd = 1, inset = 0.02)
+
+params <- expand.grid(lib_column = vars, target_column = vars, tp = -10:15)
+params <- params[params$lib_column != params$target_column, ]
+params$E <- 6
+
+output <- do.call(rbind, lapply(seq_len(NROW(params)), function(i) {
+  ccm(new_df, E = params$E[i], lib_sizes = NROW(new_df), 
+      random_libs = FALSE, lib_column = params$lib_column[i], target_column = params$target_column[i], 
+      tp = params$tp[i], silent = TRUE)
+}))
+
+output$direction <- paste(output$lib_column, "xmap to\n", output$target_column)
+
+time_delay_ccm_fig <- ggplot(output, aes(x = tp, y = rho, color = direction)) + 
+  geom_line() + theme_bw()
+print(time_delay_ccm_fig)
+

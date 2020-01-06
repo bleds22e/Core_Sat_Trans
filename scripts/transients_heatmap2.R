@@ -303,10 +303,10 @@ ggplot(quadrant_means_long, aes(time_lag, mean_transients, color = quadrant, gro
   theme(axis.text.x = element_text(angle = -45, hjust = -.1))
 #ggsave("plots/GIMMs_plots/transients_through_time_by_quadrants_0.05.png")
 
-library(ggpubr)
-plot_arranged <- ggarrange(plot_low, plot_mid, plot_high, nrow = 1, ncol = 3,
-          labels = c("transients > 0.01", "transients > 0.025", "transients > 0.05"))
-plot_arranged
+# library(ggpubr)
+# plot_arranged <- ggarrange(plot_low, plot_mid, plot_high, nrow = 1, ncol = 3,
+#           labels = c("transients > 0.01", "transients > 0.025", "transients > 0.05"))
+# plot_arranged
 #ggsave("plots/GIMMs_plots/transients_through_time_different_cutoffs.png")
 
 ### 3D plots ###
@@ -384,4 +384,4 @@ ggplot(NDVI_transient) +
   ylab('NDVI value / Rel.Abund') +
   xlab('Date') +
   theme_bw()
-ggsave("plots/GIMMs_plots/timeseries_by_community.png")
+#ggsave("plots/GIMMs_plots/timeseries_by_community.png")

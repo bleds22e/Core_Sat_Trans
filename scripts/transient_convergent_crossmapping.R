@@ -193,7 +193,7 @@ NDVI_transient$trans_rel_abund[267:268] <- 0
 #   select(rowid, trans_rel_abund, ndvi)
 
 #gimms df
-new_df <- NDVI_transient[-c(1:50, 441:513),] %>% 
+new_df <- NDVI_transient[-c(1:49, 452:523),] %>% 
   tibble::rowid_to_column() %>% 
   ungroup() %>% 
   select(rowid, trans_rel_abund, ndvi)
