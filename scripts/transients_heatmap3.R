@@ -55,6 +55,7 @@ get_transient_rel_abund <- function(data){
     filter(rel_reg_persist <= 1/3, species != 'PB') %>% 
     select(species)
   transients <- unlist(apply(transients, 1, list), recursive = FALSE)
+  print(transients)
   
   # get total abundance by period
   total_by_period <- data %>% 

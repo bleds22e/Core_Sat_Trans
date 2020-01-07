@@ -68,8 +68,8 @@ y_axis_title <- expression(Delta*" Productivity")
   theme_classic() +
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank()))
-ggsave("plots/theoretical_plots/plot4.png", plot4)
+#ggsave("plots/theoretical_plots/plot4.png", plot4)
 
 # Piece together
-multipanel <- ggarrange(plot1, plot2, plot3, plot4, labels = c("A", "B", "C", "D"), ncol = 2, nrow = 2)
-ggsave("plots/theoretical_plots/multipanel_figure.png", multipanel)
+(multipanel <- ggarrange(plot3, plot4, plot1, plot2, labels = c("A", "B", "C", "D"), ncol = 2, nrow = 2))
+#ggsave("plots/theoretical_plots/multipanel_figure.png", multipanel)
