@@ -321,17 +321,26 @@ new_df <- NDVI_transient[-c(1:49, 452:523),] %>%
 
 # CCF
 
-acf(new_df$ndvi)
+NDVI <- new_df$ndvi
+Transient_Rel_Abund <- new_df$trans_rel_abund
+
+acf(NDVI)
 lag.plot(new_df$ndvi)
 pacf(new_df$ndvi)
 fit <- forecast::auto.arima(new_df$ndvi)
 
-acf(new_df$trans_rel_abund)
+acf(Transient_Rel_Abund)
 lag.plot(new_df$trans_rel_abund)
 pacf(new_df$trans_rel_abund)
 fit2 <- forecast::auto.arima(new_df$trans_rel_abund)
 
-ccf(new_df$ndvi, new_df$trans_rel_abund)
+par(mfrow = c(3,1))
+acf(NDVI)
+acf(Transient_Rel_Abund)
+ccf(NDVI, Transient_Rel_Abund)
+
+dev.copy(png, "plots/acf_ccf.png")
+dev.off()
 
 # CONVERGENT CROSS-MAPPING
 library(rEDM)
