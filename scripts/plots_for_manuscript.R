@@ -378,5 +378,6 @@ acf(NDVI, lag.max = 15, main = "NDVI Autocorrelation")
 acf(Transient_Rel_Abund, lag.max = 15, main = "Transient Relative Abundance Autocorrelation")
 ccf(NDVI, Transient_Rel_Abund, lag.max = 13, main = "NDVI/Transient Rel. Abundance Cross-Correlation")
 
-dev.copy(png, "plots/ms_plots/acf_ccf.png")
+ppi = 100
+dev.copy(png, "plots/ms_plots/acf_ccf.png", height = 6, width = 4, units = "in", res = 300)
 dev.off()
