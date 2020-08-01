@@ -13,7 +13,7 @@ library(portalr)
 trapping <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/Portal_rodent_trapping.csv"))
 moon_dates <- read.csv(text = getURL("https://raw.githubusercontent.com/weecology/PortalData/master/Rodents/moon_dates.csv"))
 
-ndvi <- ndvi(level = "newmoon", fill = TRUE) %>% 
+ndvi <- portalr::ndvi(level = "newmoon", fill = TRUE) %>% 
   filter(newmoonnumber < 452) # filter out forecasted ndvi data--real data ends at 2013
 abund <- portalr::abundance(path = "repo", level = "Site", type = "Rodents",
                             plots = "all", unknowns = F, shape = "flat", 
