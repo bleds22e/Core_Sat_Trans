@@ -257,9 +257,37 @@ lags_long$time_lag <- factor(lags_long$time_lag,
   labs(fill = str_wrap("Mean Relative Transient Abundance", 10), 
        tag = "A") +
   theme_bw() +
-  theme(axis.text = element_text(size = 8)))
+  theme(axis.text = element_text(size = 8),
+        legend.justification = c("bottom")))
 #ggsave("plots/ms_plots/heatmap_2digit.png")
 
+
+rect_points <- data.frame(xmin = c(-Inf, median_ndvi, median_ndvi, -Inf),
+                          xmax = c(median_ndvi, Inf, Inf, median_ndvi),
+                          ymin = c(0, 0, -Inf, -Inf),
+                          ymax = c(Inf, Inf, 0, 0),
+                          text = c(NA, NA, NA, NA),
+                          fill = c("Phase 1", "Phase 2", "Phase 3", "Phase 4"))
+
+phase_plot <- ggplot(data = rect_points, aes(fill = fill)) +
+  geom_rect(data = rect_points, aes(xmin = xmin, 
+                                    xmax = xmax,
+                                    ymin = ymin,
+                                    ymax = ymax),
+                                    fill = c("#CC79A7", "#E69F00", "#56B4E9", "#009E73")) +
+  geom_vline(xintercept = median_ndvi, col = "gray", size = 1) +
+  geom_hline(yintercept = 0, col = "gray", size = 1) +
+  ggtitle(str_wrap("Phase per Quadrat", 10)) +
+  theme_bw() +
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 48))
+phase_plot
+
+#ggsave("plots/phase_per_quadrat.png", phase_plot)
+  
 ### Rel abundance by phase by lag time ### -------------------------------------
 
 # get quadrants
@@ -302,7 +330,7 @@ quadrant_means_long <- arrange(quadrant_means_long, quadrant)
 #ggsave("plots/ms_plots/transients_through_time_by_quadrants_0.05.png")
 
 (multipanel <- (plot1 / plot2))
-#ggsave("plots/ms_plots/time_lag_multipanel.png", dpi = 600)
+ggsave("plots/ms_plots/time_lag_multipanel_test.png", dpi = 600)
 
 ### Get Timeseries Plots ### ---------------------------------------------------
 
