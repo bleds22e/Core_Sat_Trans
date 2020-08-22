@@ -250,7 +250,8 @@ lags_long$time_lag <- factor(lags_long$time_lag,
   geom_tile(aes(fill = round(transients, 2))) + 
   geom_vline(xintercept = median_ndvi, col = "gray") +
   geom_hline(yintercept = 0, col = "gray") +
-  scale_fill_viridis_c(limits = c(0, 0.18)) +
+  scale_fill_continuous(high = "#132B43", low = "#56B1F7") +
+  #scale_fill_viridis_c(limits = c(0, 0.18), direction = -1) +
   facet_wrap(. ~ time_lag, nrow = 3, ncol = 4, labeller = label_parsed) +
   xlab(expression(NDVI["t"])) +
   ylab(expression(Delta * NDVI ~ "("*NDVI["t+1"] ~ - ~ NDVI["t"] * ")")) +
@@ -258,7 +259,7 @@ lags_long$time_lag <- factor(lags_long$time_lag,
        tag = "A") +
   theme_bw() +
   theme(axis.text = element_text(size = 8),
-        legend.justification = c("bottom")))
+        legend.justification = c("top")))
 #ggsave("plots/ms_plots/heatmap_2digit.png")
 
 
@@ -274,10 +275,10 @@ phase_plot <- ggplot(data = rect_points, aes(fill = fill)) +
                                     xmax = xmax,
                                     ymin = ymin,
                                     ymax = ymax),
-                                    fill = c("#CC79A7", "#E69F00", "#56B4E9", "#009E73")) +
+                                    fill = c("#CC79A7", "#E69F00", "#009E73", "#56B4E9")) +
   geom_vline(xintercept = median_ndvi, col = "gray", size = 1) +
   geom_hline(yintercept = 0, col = "gray", size = 1) +
-  ggtitle(str_wrap("Phase per Quadrat", 10)) +
+  ggtitle(str_wrap("Phase per Quadrant", 10)) +
   theme_bw() +
   theme(axis.title = element_blank(),
         axis.text = element_blank(),
@@ -323,11 +324,11 @@ quadrant_means_long <- arrange(quadrant_means_long, quadrant)
   xlab("Sampling Period") +
   ylab("Mean Transients (above 0.05)") +
   labs(tag = "B") +
-  scale_color_manual(values = c("#CC79A7", "#E69F00", "#56B4E9", "#009E73")) +
+  scale_color_manual(values = c("#CC79A7", "#E69F00", "#009E73", "#56B4E9")) +
   scale_x_discrete(labels = parse(text = levels(quadrant_means_long$time_lag))) +
   theme(axis.text.x = element_text(angle = -45, hjust = -.1),
         legend.title = element_blank())) 
-#ggsave("plots/ms_plots/transients_through_time_by_quadrants_0.05.png")
+#ggsave("plots/ms_plots/transients_through_time_by_quadrants_0.05.png", height = 5.75, width = 6.65)
 
 (multipanel <- (plot1 / plot2))
 ggsave("plots/ms_plots/time_lag_multipanel_test.png", dpi = 600)
